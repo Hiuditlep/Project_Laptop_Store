@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1",
+    "name": "Acer Nitro 5 Tiger",
+    "brand": "Acer",
+    "price": 23500000,
+    "image": "[https://placehold.co/400x300?text=Laptop](https://placehold.co/400x300?text=Laptop)",
+    "cpu": "Intel Core i5-12500H",
+    "ram": "8GB",
+    "ssd": "512GB",
+    "category": "Gaming"
+  },
+  {
+    "id": "2",
+    "name": "MacBook Air M1",
+    "brand": "Apple",
+    "price": 18990000,
+    "image": "[https://placehold.co/400x300?text=Laptop](https://placehold.co/400x300?text=Laptop)",
+    "cpu": "Apple M1",
+    "ram": "8GB",
+    "ssd": "256GB",
+    "category": "Office"
+  },
+  {
+    "id": "3",
+    "name": "Asus ROG Strix G15",
+    "brand": "Asus",
+    "price": 28000000,
+    "image": "[https://placehold.co/400x300?text=Laptop](https://placehold.co/400x300?text=Laptop)",
+    "cpu": "AMD Ryzen 7 6800H",
+    "ram": "16GB",
+    "ssd": "512GB",
+    "category": "Gaming"
+  }
+]

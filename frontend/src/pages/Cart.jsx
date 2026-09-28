@@ -1,9 +1,11 @@
+import { Link } from "react-router-dom";
+
 export default function Cart({ cart, updateQuantity, removeFromCart }) {
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
   if (cart.length === 0) {
     return (
-      <div className="text-center text-xl mt-10">
+      <div className="text-center text-xl mt-10 font-medium">
         Giỏ hàng của bạn đang trống!
       </div>
     );
@@ -11,40 +13,44 @@ export default function Cart({ cart, updateQuantity, removeFromCart }) {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6">Giỏ hàng của bạn</h2>
+      <h2 className="text-2xl font-bold mb-6 border-b pb-2">
+        Giỏ hàng của bạn
+      </h2>
 
       <div className="space-y-4">
         {cart.map((item) => (
           <div
             key={item.id}
-            className="flex items-center justify-between border-b pb-4"
+            className="flex flex-col md:flex-row items-center justify-between border-b pb-4 gap-4"
           >
-            <div className="flex items-center gap-4 w-1/2">
+            <div className="flex items-center gap-4 w-full md:w-1/2">
               <img
                 src={item.image}
                 alt={item.name}
-                className="w-20 h-20 object-cover rounded"
+                className="w-20 h-20 object-cover rounded border"
               />
-              <h3 className="font-semibold">{item.name}</h3>
+              <h3 className="font-semibold text-gray-800 line-clamp-2">
+                {item.name}
+              </h3>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => updateQuantity(item.id, -1)}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 font-bold"
               >
                 -
               </button>
               <span className="w-8 text-center font-bold">{item.qty}</span>
               <button
                 onClick={() => updateQuantity(item.id, 1)}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 font-bold"
               >
                 +
               </button>
             </div>
 
-            <div className="font-bold text-red-600 w-32 text-right">
+            <div className="font-bold text-red-600 w-full md:w-32 text-right">
               {(item.price * item.qty).toLocaleString("vi-VN")} đ
             </div>
 
@@ -64,9 +70,13 @@ export default function Cart({ cart, updateQuantity, removeFromCart }) {
           {total.toLocaleString("vi-VN")} đ
         </p>
       </div>
-      <button className="w-full mt-6 bg-green-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-green-700">
+
+      <Link
+        to="/checkout"
+        className="w-full mt-6 bg-green-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-green-700 block text-center transition-colors"
+      >
         TIẾN HÀNH THANH TOÁN
-      </button>
+      </Link>
     </div>
   );
 }

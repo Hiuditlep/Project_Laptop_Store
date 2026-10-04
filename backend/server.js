@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const products = require("./data/products.json");
+let products = require("./data/products.json");
 
 const app = express();
 app.use(cors());
@@ -126,15 +126,31 @@ app.get("/api/users", (req, res) => {
   res.json(users);
 });
 
-// API: Xem toàn bộ danh sách đơn hàng
-app.get("/api/orders", (req, res) => {
-  res.json(orders);
-});
-
 // API: Admin xóa người dùng
 app.delete("/api/users/:id", (req, res) => {
   users = users.filter((u) => u.id !== parseInt(req.params.id));
   res.json({ success: true, message: "Đã xóa người dùng" });
+});
+
+// [ADMIN] Thêm sản phẩm mới
+app.post("/api/products", (req, res) => {
+  const newProduct = {
+    id: Date.now().toString(), // Tạo ID tự động
+    ...req.body,
+  };
+  products.push(newProduct);
+  res.json({ success: true, product: newProduct });
+});
+
+// [ADMIN] Xóa sản phẩm
+app.delete("/api/products/:id", (req, res) => {
+  products = products.filter((p) => p.id !== req.params.id);
+  res.json({ success: true, message: "Đã xóa sản phẩm" });
+});
+
+// API: Xem toàn bộ danh sách đơn hàng
+app.get("/api/orders", (req, res) => {
+  res.json(orders);
 });
 
 // API: Admin cập nhật trạng thái đơn hàng

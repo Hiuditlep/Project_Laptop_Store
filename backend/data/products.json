@@ -8,7 +8,8 @@
     "cpu": "Intel Core i5-12500H",
     "ram": "8GB",
     "ssd": "512GB",
-    "category": "Gaming"
+    "category": "Gaming",
+    "stock_quantity": 0
   },
   {
     "id": "2",
@@ -19,7 +20,8 @@
     "cpu": "Apple M1",
     "ram": "8GB",
     "ssd": "256GB",
-    "category": "Office"
+    "category": "Office",
+    "stock_quantity": 0
   },
   {
     "id": "3",
@@ -30,6 +32,7 @@
     "cpu": "AMD Ryzen 7 6800H",
     "ram": "16GB",
     "ssd": "512GB",
-    "category": "Gaming"
+    "category": "Gaming",
+    "stock_quantity": 0
   }
 ]

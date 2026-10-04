@@ -51,14 +51,21 @@ export default function Cart({ cart, updateQuantity, removeFromCart }) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => updateQuantity(item.id, -1)}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 font-bold"
+                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 font-bold text-black"
               >
                 -
               </button>
+
               <span className="w-8 text-center font-bold">{item.qty}</span>
+
               <button
                 onClick={() => updateQuantity(item.id, 1)}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 font-bold"
+                disabled={item.qty >= item.stock_quantity}
+                className={`px-3 py-1 rounded font-bold transition ${
+                  item.qty >= item.stock_quantity
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-gray-200 hover:bg-gray-300 text-black"
+                }`}
               >
                 +
               </button>

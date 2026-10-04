@@ -32,30 +32,55 @@ function App() {
     localStorage.removeItem("user");
   };
 
+  // Lệnh thêm vào giỏ hàng có kiểm tra tồn kho
   const addToCart = (product) => {
+    // 1. Chặn ngay nếu sản phẩm đã hết hàng
+    if (product.stock_quantity <= 0) {
+      alert("Sản phẩm này đã tạm hết hàng!");
+      return;
+    }
+
+    // 2. Kiểm tra xem trong giỏ đã có bao nhiêu cái
+    const existingItem = cart.find((item) => item.id === product.id);
+    if (existingItem && existingItem.qty >= product.stock_quantity) {
+      alert(`Rất tiếc, kho chỉ còn tối đa ${product.stock_quantity} sản phẩm!`);
+      return;
+    }
+
+    // 3. Nếu qua được các vòng kiểm tra trên thì mới thêm vào giỏ
     setCart((prevCart) => {
-      // Kiểm tra xem laptop này đã có trong giỏ chưa
-      const existingItem = prevCart.find((item) => item.id === product.id);
-      if (existingItem) {
-        // Nếu có rồi thì tăng số lượng lên 1
+      const itemInCart = prevCart.find((item) => item.id === product.id);
+      if (itemInCart) {
         return prevCart.map((item) =>
           item.id === product.id ? { ...item, qty: item.qty + 1 } : item,
         );
       }
-      // Nếu chưa có thì thêm mới vào mảng với số lượng là 1
       return [...prevCart, { ...product, qty: 1 }];
     });
     alert("Đã thêm vào giỏ hàng!");
   };
 
+  // Lệnh Tăng/Giảm số lượng có khóa giới hạn
   const updateQuantity = (id, amount) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === id
-          ? { ...item, qty: Math.max(1, item.qty + amount) } // Không cho số lượng tụt xuống dưới 1
-          : item,
-      ),
-    );
+    const itemToUpdate = cart.find((item) => item.id === id);
+    if (itemToUpdate) {
+      const newQty = itemToUpdate.qty + amount;
+
+      // Chặn tụt xuống dưới 1
+      if (newQty < 1) return;
+
+      // Chặn tăng vượt quá tồn kho
+      if (newQty > itemToUpdate.stock_quantity) {
+        alert(`Kho chỉ còn ${itemToUpdate.stock_quantity} sản phẩm!`);
+        return;
+      }
+
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.id === id ? { ...item, qty: newQty } : item,
+        ),
+      );
+    }
   };
 
   const removeFromCart = (id) =>

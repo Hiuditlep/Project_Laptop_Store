@@ -49,11 +49,23 @@ export default function Detail({ addToCart }) {
           <span className="font-bold text-gray-800">{product.brand}</span>
         </p>
 
+        {/* THÊM MỚI: HIỂN THỊ TÌNH TRẠNG KHO */}
+        <p className="text-gray-500 mb-2">
+          Tình trạng:{" "}
+          {product.stock_quantity > 0 ? (
+            <span className="font-bold text-green-600">
+              Còn hàng ({product.stock_quantity})
+            </span>
+          ) : (
+            <span className="font-bold text-red-600">Tạm hết hàng</span>
+          )}
+        </p>
+
         <p className="text-red-600 text-3xl font-bold mb-6">
           {product.price.toLocaleString("vi-VN")} đ
         </p>
 
-        {/* Bảng cấu hình chi tiết (Đã CSS lại cho giống bảng thông số chuẩn) */}
+        {/* Bảng cấu hình chi tiết */}
         <div className="bg-gray-50 p-5 rounded-lg mb-6 border">
           <h3 className="font-bold mb-3 text-lg border-b border-gray-200 pb-2 uppercase">
             Cấu hình chi tiết
@@ -80,13 +92,18 @@ export default function Detail({ addToCart }) {
           </ul>
         </div>
 
-        {/* Cụm nút bấm */}
+        {/* Cụm nút bấm đã được nâng cấp logic khóa nút khi hết hàng */}
         <div className="flex gap-4 mt-8">
           <button
             onClick={() => addToCart(product)}
-            className="flex-1 bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition"
+            disabled={product.stock_quantity <= 0}
+            className={`flex-1 py-3 rounded-lg font-bold transition ${
+              product.stock_quantity > 0
+                ? "bg-red-600 text-white hover:bg-red-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
           >
-            THÊM VÀO GIỎ HÀNG
+            {product.stock_quantity > 0 ? "THÊM VÀO GIỎ HÀNG" : "ĐÃ HẾT HÀNG"}
           </button>
           <button
             onClick={() => navigate(-1)}

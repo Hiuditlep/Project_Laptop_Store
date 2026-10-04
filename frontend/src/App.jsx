@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Detail from "./pages/Detail";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
+import MyOrders from "./pages/MyOrders";
 
 function App() {
   const [cart, setCart] = useState([]);
@@ -52,8 +54,12 @@ function App() {
       <div className="min-h-screen bg-gray-100 font-sans w-full">
         <header className="bg-red-600 text-white p-3 shadow-md sticky top-0 z-50 w-full">
           <div className="w-full px-4 md:px-8 mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <Link to="/" className="text-2xl font-black italic tracking-wider">
-              UseYourMind
+            <Link to="/" className="flex items-center">
+              <img
+                src="/Logo.png"
+                alt="UseYourMind Logo"
+                className="h-10 w-auto object-contain hover:opacity-80 transition-opacity"
+              />
             </Link>
 
             <div className="flex-1 w-full md:max-w-3xl relative">
@@ -69,14 +75,38 @@ function App() {
             <nav>
               <ul className="flex items-center gap-4">
                 {user ? (
-                  <li className="flex items-center gap-2">
-                    <span className="font-medium">Chào, {user.username}</span>
-                    <button
-                      onClick={handleLogout}
-                      className="text-sm bg-red-800 px-3 py-1 rounded hover:bg-red-900"
-                    >
-                      Thoát
-                    </button>
+                  // Sử dụng class 'group' của Tailwind để làm menu trỏ chuột
+                  <li className="relative group py-4 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs text-gray-600">
+                        👤
+                      </div>
+                      <span className="font-medium hover:text-gray-200">
+                        {user.username}
+                      </span>
+                    </div>
+
+                    {/* Khối Dropdown (Mặc định ẩn, hover vào thẻ li sẽ hiện) */}
+                    <div className="absolute right-0 top-full mt-0 w-48 bg-white text-black shadow-lg rounded-sm overflow-hidden hidden group-hover:block z-50 border">
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-3 text-sm hover:bg-gray-100 transition"
+                      >
+                        Tài Khoản Của Tôi
+                      </Link>
+                      <Link
+                        to="/my-orders"
+                        className="block px-4 py-3 text-sm hover:bg-gray-100 transition"
+                      >
+                        Đơn Mua
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 transition text-red-600"
+                      >
+                        Đăng Xuất
+                      </button>
+                    </div>
                   </li>
                 ) : (
                   <li>
@@ -87,14 +117,17 @@ function App() {
                 )}
 
                 {/* NÚT ADMIN ĐÃ ĐƯỢC THÊM VÀO ĐÂY */}
-                <li>
-                  <Link
-                    to="/admin"
-                    className="font-medium hover:text-yellow-300 transition"
-                  >
-                    Admin
-                  </Link>
-                </li>
+                {/* CHỈ HIỂN THỊ NÚT ADMIN KHI ROLE LÀ ADMIN */}
+                {user?.role === "admin" && (
+                  <li>
+                    <Link
+                      to="/admin"
+                      className="font-bold text-yellow-300 hover:text-white transition bg-red-800 px-3 py-1 rounded"
+                    >
+                      Admin Panel
+                    </Link>
+                  </li>
+                )}
 
                 <li>
                   <Link
@@ -142,6 +175,11 @@ function App() {
 
             {/* ROUTE ADMIN ĐÃ ĐƯỢC THÊM VÀO ĐÂY */}
             <Route path="/admin" element={<Admin />} />
+            <Route
+              path="/profile"
+              element={<Profile user={user} setUser={setUser} />}
+            />
+            <Route path="/my-orders" element={<MyOrders user={user} />} />
           </Routes>
         </main>
       </div>

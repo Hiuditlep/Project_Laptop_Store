@@ -11,23 +11,41 @@ export default function Auth({ setUser }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Tùy chỉnh API ở đây khi bạn nối với Backend
+    // Gắn đúng link API Đăng nhập hoặc Đăng ký tùy theo trạng thái
     const url = isLogin
       ? "http://localhost:5000/api/users/login"
       : "http://localhost:5000/api/users/register";
 
     try {
-      // Giả lập luồng đăng nhập thành công để test giao diện
-      alert(isLogin ? "Đăng nhập thành công!" : "Đăng ký thành công!");
-      const mockUser = { id: Date.now(), username: username, role: "user" };
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-      setUser(mockUser);
-      localStorage.setItem("user", JSON.stringify(mockUser));
+      const data = await res.json();
 
-      // navigate(-1) giúp quay lại đúng trang trước đó (vd: đang xem laptop thì quay lại laptop)
-      navigate(-1);
+      // KIỂM TRA BẢO MẬT: Nếu Backend xác nhận đúng thì mới cho vào
+      if (res.ok && data.success) {
+        alert(isLogin ? "Đăng nhập thành công!" : "Đăng ký thành công!");
+
+        // Cấp quyền admin nếu tên là admin, ngược lại là user
+        const userRole = username.toLowerCase() === "admin" ? "admin" : "user";
+        const userData = {
+          id: data.user.id,
+          username: username,
+          role: userRole,
+        };
+
+        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
+        navigate(-1); // Quay lại trang cũ
+      } else {
+        // Nếu Backend báo lỗi (Sai pass, chưa đăng ký...) thì hiện bảng thông báo
+        alert(data.message || "Thông tin không chính xác!");
+      }
     } catch (error) {
-      alert("Có lỗi xảy ra, vui lòng thử lại!");
+      alert("Lỗi kết nối Server! Vui lòng kiểm tra lại Backend (server.js).");
     }
   };
 

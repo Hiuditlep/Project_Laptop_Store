@@ -41,40 +41,46 @@ app.get("/api/products/:id", (req, res) => {
 // 3. NHÓM API XÁC THỰC (AUTHENTICATION)
 // ==========================================
 // API: Đăng ký tài khoản mới (Mặc định role 'user')
-app.post("/api/register", (req, res) => {
+// [AUTH] Đăng ký tài khoản
+app.post("/api/users/register", (req, res) => {
   const { username, password } = req.body;
-  const exists = users.find((u) => u.username === username);
 
-  if (exists) {
+  // 1. Kiểm tra xem tài khoản đã ai tạo chưa
+  const userExists = users.find((u) => u.username === username);
+  if (userExists) {
     return res
       .status(400)
-      .json({ success: false, message: "Tài khoản đã tồn tại!" });
+      .json({
+        success: false,
+        message: "Tài khoản đã tồn tại! Vui lòng đăng nhập.",
+      });
   }
 
-  const newUser = { id: Date.now(), username, password, role: "user" };
+  // 2. Nếu chưa ai tạo thì lưu vào database
+  const newUser = { id: Date.now().toString(), username, password };
   users.push(newUser);
-  res.json({
-    success: true,
-    user: { id: newUser.id, username: newUser.username, role: newUser.role },
-  });
+  res.json({ success: true, user: newUser });
 });
 
-// API: Đăng nhập
-app.post("/api/login", (req, res) => {
+// [AUTH] Đăng nhập
+app.post("/api/users/login", (req, res) => {
   const { username, password } = req.body;
+
+  // Kiểm tra đúng tên VÀ đúng mật khẩu
   const user = users.find(
     (u) => u.username === username && u.password === password,
   );
 
   if (user) {
-    res.json({
-      success: true,
-      user: { id: user.id, username: user.username, role: user.role },
-    });
+    res.json({ success: true, user });
   } else {
+    // Chặn lại nếu sai
     res
       .status(401)
-      .json({ success: false, message: "Sai tên đăng nhập hoặc mật khẩu!" });
+      .json({
+        success: false,
+        message: "Tài khoản chưa đăng ký hoặc sai mật khẩu!",
+      });
   }
 });
 
@@ -155,15 +161,25 @@ app.get("/api/orders", (req, res) => {
 
 // API: Admin cập nhật trạng thái đơn hàng
 app.put("/api/orders/:id/status", (req, res) => {
+  const { status } = req.body;
+  // Tìm đơn hàng cũ
   const order = orders.find((o) => o.id === req.params.id);
+
   if (order) {
-    order.status = req.body.status;
-    res.json({ success: true });
+    // CHỈ cập nhật đúng cái trường status, giữ nguyên toàn bộ data cũ (userId, tổng tiền, items...)
+    order.status = status;
+    res.json({ success: true, order });
   } else {
     res
       .status(404)
       .json({ success: false, message: "Không tìm thấy đơn hàng" });
   }
+});
+
+// [ADMIN] Xóa đơn hàng vĩnh viễn
+app.delete("/api/orders/:id", (req, res) => {
+  orders = orders.filter((o) => o.id !== req.params.id);
+  res.json({ success: true, message: "Đã xóa đơn hàng" });
 });
 
 // API: Admin xóa đơn hàng

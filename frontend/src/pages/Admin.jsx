@@ -92,7 +92,20 @@ export default function Admin() {
   };
 
   // ==========================================
-  // 4. HIỂN THỊ GIAO DIỆN
+  // 4. CÁC HÀM XỬ LÝ ĐƠN HÀNG
+  // ==========================================
+  const handleDeleteOrder = async (id) => {
+    if (
+      window.confirm("Bạn có chắc chắn muốn xóa vĩnh viễn đơn hàng này không?")
+    ) {
+      await fetch(`http://localhost:5000/api/orders/${id}`, {
+        method: "DELETE",
+      });
+      fetchData(); // Tải lại danh sách
+    }
+  };
+  // ==========================================
+  // 5. HIỂN THỊ GIAO DIỆN
   // ==========================================
   return (
     <div className="bg-white p-6 rounded-lg shadow-md min-h-screen">
@@ -137,15 +150,60 @@ export default function Admin() {
                   {o.total.toLocaleString("vi-VN")} đ
                 </p>
               </div>
-              <select
-                value={o.status || "Chờ duyệt"}
-                onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
-                className="border p-2 rounded"
-              >
-                <option value="Chờ duyệt">Chờ duyệt</option>
-                <option value="Đang giao">Đang giao</option>
-                <option value="Đã giao">Đã giao</option>
-              </select>
+              {/* NỘI DUNG TAB ĐƠN HÀNG */}
+              {activeTab === "orders" && (
+                <div className="space-y-4">
+                  {orders.map((o) => (
+                    <div
+                      key={o.id}
+                      className="bg-gray-50 border p-4 rounded-lg flex justify-between items-center hover:shadow-md transition"
+                    >
+                      <div>
+                        <p className="font-bold text-blue-600">{o.id}</p>
+                        <p className="text-sm">
+                          Khách hàng:{" "}
+                          <span className="font-semibold">
+                            {o.customerInfo?.name || "Không rõ"}
+                          </span>
+                        </p>
+                        <p className="text-red-600 font-bold">
+                          Tổng tiền: {o.total?.toLocaleString("vi-VN")} đ
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {/* Dropdown trạng thái đã thêm "Đã hủy" */}
+                        <select
+                          value={o.status || "Chờ duyệt"}
+                          onChange={(e) =>
+                            handleUpdateStatus(o.id, e.target.value)
+                          }
+                          className={`border p-2 rounded font-medium outline-none ${
+                            o.status === "Đã giao"
+                              ? "bg-green-100 text-green-700"
+                              : o.status === "Đã hủy"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          <option value="Chờ duyệt">Chờ duyệt</option>
+                          <option value="Đang giao">Đang giao</option>
+                          <option value="Đã giao">Đã giao</option>
+                          <option value="Đã hủy">Đã hủy</option>
+                        </select>
+
+                        {/* Nút Xóa đơn hàng */}
+                        <button
+                          onClick={() => handleDeleteOrder(o.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded font-bold transition"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

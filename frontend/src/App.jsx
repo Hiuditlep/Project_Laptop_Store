@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
+
+// Các trang (Pages) của trang web
 import Home from "./pages/Home";
 import Detail from "./pages/Detail";
 import Cart from "./pages/Cart";
@@ -10,13 +12,21 @@ import Profile from "./pages/Profile";
 import MyOrders from "./pages/MyOrders";
 
 function App() {
+  // ==========================================
+  // 1. STATE TOÀN CỤC (GLOBAL STATE)
+  // ==========================================
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  // Khởi tạo user từ localStorage nếu đã đăng nhập trước đó
+
+  // Khởi tạo user từ localStorage. Dùng hàm callback () => ... để tối ưu hiệu suất,
+  // chỉ đọc ổ cứng 1 lần duy nhất khi web vừa bật lên.
   const [user, setUser] = useState(
     () => JSON.parse(localStorage.getItem("user")) || null,
   );
 
+  // ==========================================
+  // 2. CÁC HÀM XỬ LÝ DỮ LIỆU TÀI KHOẢN & GIỎ HÀNG
+  // ==========================================
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -24,11 +34,15 @@ function App() {
 
   const addToCart = (product) => {
     setCart((prevCart) => {
+      // Kiểm tra xem laptop này đã có trong giỏ chưa
       const existingItem = prevCart.find((item) => item.id === product.id);
-      if (existingItem)
+      if (existingItem) {
+        // Nếu có rồi thì tăng số lượng lên 1
         return prevCart.map((item) =>
           item.id === product.id ? { ...item, qty: item.qty + 1 } : item,
         );
+      }
+      // Nếu chưa có thì thêm mới vào mảng với số lượng là 1
       return [...prevCart, { ...product, qty: 1 }];
     });
     alert("Đã thêm vào giỏ hàng!");
@@ -38,7 +52,7 @@ function App() {
     setCart((prevCart) =>
       prevCart.map((item) =>
         item.id === id
-          ? { ...item, qty: Math.max(1, item.qty + amount) }
+          ? { ...item, qty: Math.max(1, item.qty + amount) } // Không cho số lượng tụt xuống dưới 1
           : item,
       ),
     );
@@ -49,11 +63,16 @@ function App() {
 
   const clearCart = () => setCart([]);
 
+  // ==========================================
+  // 3. HIỂN THỊ GIAO DIỆN CHÍNH (LAYOUT & ROUTER)
+  // ==========================================
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-100 font-sans w-full">
+        {/* HEADER CỐ ĐỊNH (STICKY) */}
         <header className="bg-red-600 text-white p-3 shadow-md sticky top-0 z-50 w-full">
           <div className="w-full px-4 md:px-8 mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Logo */}
             <Link to="/" className="flex items-center">
               <img
                 src="/Logo.png"
@@ -62,6 +81,7 @@ function App() {
               />
             </Link>
 
+            {/* Thanh tìm kiếm */}
             <div className="flex-1 w-full md:max-w-3xl relative">
               <input
                 type="text"
@@ -72,10 +92,11 @@ function App() {
               />
             </div>
 
+            {/* Điều hướng (Navigation) */}
             <nav>
               <ul className="flex items-center gap-4">
+                {/* HIỂN THỊ MENU TÀI KHOẢN (NẾU ĐÃ ĐĂNG NHẬP) */}
                 {user ? (
-                  // Sử dụng class 'group' của Tailwind để làm menu trỏ chuột
                   <li className="relative group py-4 cursor-pointer">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs text-gray-600">
@@ -86,7 +107,7 @@ function App() {
                       </span>
                     </div>
 
-                    {/* Khối Dropdown (Mặc định ẩn, hover vào thẻ li sẽ hiện) */}
+                    {/* Dropdown Menu */}
                     <div className="absolute right-0 top-full mt-0 w-48 bg-white text-black shadow-lg rounded-sm overflow-hidden hidden group-hover:block z-50 border">
                       <Link
                         to="/profile"
@@ -109,6 +130,7 @@ function App() {
                     </div>
                   </li>
                 ) : (
+                  // HIỂN THỊ NÚT ĐĂNG NHẬP (NẾU CHƯA ĐĂNG NHẬP)
                   <li>
                     <Link to="/auth" className="hover:underline font-medium">
                       Đăng nhập
@@ -116,8 +138,7 @@ function App() {
                   </li>
                 )}
 
-                {/* NÚT ADMIN ĐÃ ĐƯỢC THÊM VÀO ĐÂY */}
-                {/* CHỈ HIỂN THỊ NÚT ADMIN KHI ROLE LÀ ADMIN */}
+                {/* HIỂN THỊ NÚT ADMIN (CHỈ KHI LÀ ADMIN) */}
                 {user?.role === "admin" && (
                   <li>
                     <Link
@@ -129,6 +150,7 @@ function App() {
                   </li>
                 )}
 
+                {/* NÚT GIỎ HÀNG */}
                 <li>
                   <Link
                     to="/cart"
@@ -145,6 +167,7 @@ function App() {
           </div>
         </header>
 
+        {/* PHẦN RUỘT TRANG WEB (ROUTES) */}
         <main className="w-full px-4 md:px-8 mt-6">
           <Routes>
             <Route
@@ -172,8 +195,6 @@ function App() {
                 <Checkout cart={cart} user={user} clearCart={clearCart} />
               }
             />
-
-            {/* ROUTE ADMIN ĐÃ ĐƯỢC THÊM VÀO ĐÂY */}
             <Route path="/admin" element={<Admin />} />
             <Route
               path="/profile"

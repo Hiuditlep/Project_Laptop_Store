@@ -1,34 +1,47 @@
 import { useState, useEffect } from "react";
 
 export default function Admin() {
+  // ==========================================
+  // 1. KHỞI TẠO STATE (TRẠNG THÁI DỮ LIỆU)
+  // ==========================================
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
 
-  // Hàm tải lại dữ liệu
+  // ==========================================
+  // 2. CÁC HÀM GIAO TIẾP VỚI BACKEND (API CALLS)
+  // ==========================================
+
+  // Hàm lấy dữ liệu mới nhất từ server
   const fetchData = () => {
     fetch("http://localhost:5000/api/users")
       .then((res) => res.json())
       .then((data) => setUsers(data));
+
     fetch("http://localhost:5000/api/orders")
       .then((res) => res.json())
       .then((data) => setOrders(data));
   };
 
+  // Tự động chạy fetchData() một lần duy nhất khi vừa mở trang Admin
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Xử lý Xóa User
+  // ==========================================
+  // 3. CÁC HÀM XỬ LÝ SỰ KIỆN (TƯƠNG TÁC CỦA ADMIN)
+  // ==========================================
+
+  // Xóa tài khoản người dùng
   const handleDeleteUser = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
       await fetch(`http://localhost:5000/api/users/${id}`, {
         method: "DELETE",
       });
-      fetchData(); // Tải lại danh sách sau khi xóa
+      fetchData(); // Bắt buộc gọi lại fetchData để mảng users cập nhật giao diện mới
     }
   };
 
-  // Xử lý Cập nhật trạng thái Đơn hàng
+  // Đổi trạng thái đơn hàng (Chờ duyệt -> Đang giao,...)
   const handleUpdateStatus = async (id, newStatus) => {
     await fetch(`http://localhost:5000/api/orders/${id}/status`, {
       method: "PUT",
@@ -38,7 +51,7 @@ export default function Admin() {
     fetchData();
   };
 
-  // Xử lý Xóa Đơn hàng
+  // Xóa vĩnh viễn đơn hàng
   const handleDeleteOrder = async (id) => {
     if (window.confirm("Xóa vĩnh viễn đơn hàng này?")) {
       await fetch(`http://localhost:5000/api/orders/${id}`, {
@@ -48,14 +61,19 @@ export default function Admin() {
     }
   };
 
-  // Hàm chọn màu cho trạng thái đơn hàng
+  // ==========================================
+  // 4. HÀM HỖ TRỢ GIAO DIỆN (UI HELPERS)
+  // ==========================================
   const getStatusColor = (status) => {
     if (status === "Đã giao") return "bg-green-100 text-green-800";
     if (status === "Đang giao") return "bg-blue-100 text-blue-800";
     if (status === "Đã hủy") return "bg-red-100 text-red-800";
-    return "bg-yellow-100 text-yellow-800"; // Chờ duyệt
+    return "bg-yellow-100 text-yellow-800";
   };
 
+  // ==========================================
+  // 5. HIỂN THỊ GIAO DIỆN (RENDER)
+  // ==========================================
   return (
     <div className="bg-white p-6 rounded-lg shadow-md min-h-screen">
       <h2 className="text-3xl font-bold mb-8 text-center text-red-600 uppercase border-b pb-4">
@@ -166,8 +184,6 @@ export default function Admin() {
                     <p className="font-bold text-red-600 text-lg mb-2 md:mb-0">
                       Tổng: {o.total.toLocaleString("vi-VN")} đ
                     </p>
-
-                    {/* Các nút thao tác Admin */}
                     <div className="flex gap-2 text-sm">
                       <select
                         value={o.status || "Chờ duyệt"}

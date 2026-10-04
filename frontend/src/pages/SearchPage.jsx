@@ -1,28 +1,28 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
-export default function Home({ addToCart, searchTerm }) {
+export default function SearchPage({ addToCart }) {
+  // Lấy từ khóa "q" từ trên thanh URL (vd: /search?q=asus)
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/products?search=${searchTerm}`)
+    // Gọi API lọc sản phẩm theo từ khóa
+    fetch(`http://localhost:5000/api/products?search=${query}`)
       .then((res) => res.json())
       .then((data) => setProducts(data));
-  }, [searchTerm]);
+  }, [query]);
 
   return (
     <div className="w-full">
-      <div className="mb-6 border-b pb-2">
-        {/* Đã xóa thanh Danh mục bên phải, chỉ giữ lại Tiêu đề */}
-        <h2 className="text-xl font-bold uppercase text-gray-800 border-b-2 border-red-600 inline-block pb-1 mb-[-9px]">
-          Laptop Nổi Bật
-        </h2>
-      </div>
+      <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
+        Kết quả tìm kiếm cho: <span className="text-red-600">"{query}"</span>
+      </h2>
 
-      {/* HIỂN THỊ DANH SÁCH SẢN PHẨM */}
       {products.length === 0 ? (
-        <div className="text-center text-gray-500 py-12 bg-white rounded-lg shadow-sm border">
-          Không có sản phẩm nào.
+        <div className="text-center py-20 bg-white rounded-lg shadow-sm border text-gray-500">
+          Không tìm thấy laptop nào phù hợp với từ khóa "{query}"
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">

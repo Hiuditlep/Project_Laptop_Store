@@ -65,7 +65,7 @@ export default function Detail({ addToCart }) {
           {product.price.toLocaleString("vi-VN")} đ
         </p>
 
-        {/* Bảng cấu hình chi tiết */}
+        {/* Bảng cấu hình chi tiết (Đã map đầy đủ theo Database ERD) */}
         <div className="bg-gray-50 p-5 rounded-lg mb-6 border">
           <h3 className="font-bold mb-3 text-lg border-b border-gray-200 pb-2 uppercase">
             Cấu hình chi tiết
@@ -75,17 +75,53 @@ export default function Detail({ addToCart }) {
               <span className="text-gray-500">Vi xử lý (CPU):</span>
               <span className="font-semibold text-right">{product.cpu}</span>
             </li>
+
+            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
+              <span className="text-gray-500">Card đồ họa (GPU):</span>
+              <span className="font-semibold text-right">
+                {product.gpu}{" "}
+                {product.gpu_vram_gb ? `(${product.gpu_vram_gb}GB)` : ""}
+              </span>
+            </li>
+
             <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
               <span className="text-gray-500">RAM:</span>
               <span className="font-semibold text-right">{product.ram}</span>
             </li>
+
             <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
-              <span className="text-gray-500">Ổ cứng (SSD):</span>
-              <span className="font-semibold text-right">{product.ssd}</span>
+              <span className="text-gray-500">Ổ cứng:</span>
+              <span className="font-semibold text-right">
+                {product.ssd}{" "}
+                {product.hdd_gb > 0 ? ` + ${product.hdd_gb}GB HDD` : ""}
+              </span>
             </li>
-            <li className="flex justify-between pb-1">
+
+            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
+              <span className="text-gray-500">Màn hình:</span>
+              <span className="font-semibold text-right">
+                {product.screen_size_in}" {product.panel_type} (
+                {product.resolution}) - {product.refresh_rate_hz}Hz
+              </span>
+            </li>
+
+            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
+              <span className="text-gray-500">Trọng lượng:</span>
+              <span className="font-semibold text-right">
+                {product.weight_kg} kg
+              </span>
+            </li>
+
+            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
+              <span className="text-gray-500">Pin & Hệ điều hành:</span>
+              <span className="font-semibold text-right">
+                {product.battery_wh}Wh | {product.operating_system}
+              </span>
+            </li>
+
+            <li className="flex justify-between pb-1 mt-2 pt-1">
               <span className="text-gray-500">Phân khúc:</span>
-              <span className="font-semibold text-right uppercase">
+              <span className="font-semibold text-right uppercase text-blue-600">
                 {product.category}
               </span>
             </li>

@@ -6,7 +6,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// API Lấy danh sách sản phẩm (có hỗ trợ tìm kiếm)
+// ==========================================
+// 1. MOCK DATABASE (DỮ LIỆU TẠM TRÊN RAM)
+// ==========================================
+let users = [{ id: 1, username: "admin", password: "123456", role: "admin" }];
+let orders = [];
+
+// ==========================================
+// 2. NHÓM API SẢN PHẨM (PUBLIC)
+// ==========================================
+// API: Lấy danh sách sản phẩm (có hỗ trợ tìm kiếm)
 app.get("/api/products", (req, res) => {
   const searchQuery = req.query.search;
   if (searchQuery) {
@@ -18,7 +27,7 @@ app.get("/api/products", (req, res) => {
   res.json(products);
 });
 
-// API Lấy chi tiết 1 sản phẩm theo ID
+// API: Lấy chi tiết 1 sản phẩm theo ID
 app.get("/api/products/:id", (req, res) => {
   const product = products.find((p) => p.id === req.params.id);
   if (product) {
@@ -29,21 +38,19 @@ app.get("/api/products/:id", (req, res) => {
 });
 
 // ==========================================
-// MOCK DATA CÓ SẴN TÀI KHOẢN ADMIN
+// 3. NHÓM API XÁC THỰC (AUTHENTICATION)
 // ==========================================
-let users = [{ id: 1, username: "admin", password: "123456", role: "admin" }];
-let orders = [];
-
-// API Đăng ký
+// API: Đăng ký tài khoản mới (Mặc định role 'user')
 app.post("/api/register", (req, res) => {
   const { username, password } = req.body;
   const exists = users.find((u) => u.username === username);
-  if (exists)
+
+  if (exists) {
     return res
       .status(400)
       .json({ success: false, message: "Tài khoản đã tồn tại!" });
+  }
 
-  // Gắn mặc định role là 'user' cho khách hàng mới đăng ký
   const newUser = { id: Date.now(), username, password, role: "user" };
   users.push(newUser);
   res.json({
@@ -52,14 +59,14 @@ app.post("/api/register", (req, res) => {
   });
 });
 
-// API Đăng nhập
+// API: Đăng nhập
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
   const user = users.find(
     (u) => u.username === username && u.password === password,
   );
+
   if (user) {
-    // Trả về thêm thông tin role để Frontend biết ai là admin
     res.json({
       success: true,
       user: { id: user.id, username: user.username, role: user.role },
@@ -71,14 +78,15 @@ app.post("/api/login", (req, res) => {
   }
 });
 
-// API Cập nhật thông tin cá nhân
+// ==========================================
+// 4. NHÓM API KHÁCH HÀNG (USER / CUSTOMER)
+// ==========================================
+// API: Cập nhật thông tin cá nhân (Hồ sơ)
 app.put("/api/users/:id", (req, res) => {
   const { fullName, email, phone } = req.body;
-  // Tìm user đang cần sửa
   const userIndex = users.findIndex((u) => u.id === parseInt(req.params.id));
 
   if (userIndex !== -1) {
-    // Cập nhật thông tin mới vào mảng
     users[userIndex] = { ...users[userIndex], fullName, email, phone };
     res.json({ success: true, user: users[userIndex] });
   } else {
@@ -88,7 +96,7 @@ app.put("/api/users/:id", (req, res) => {
   }
 });
 
-// API Đặt hàng (Checkout)
+// API: Khách hàng Đặt hàng (Checkout)
 app.post("/api/orders", (req, res) => {
   const { userId, customerInfo, items, total } = req.body;
   const newOrder = {
@@ -104,35 +112,32 @@ app.post("/api/orders", (req, res) => {
   res.json({ success: true, orderId: newOrder.id });
 });
 
-// API Lấy danh sách đơn hàng của 1 Khách hàng cụ thể
+// API: Lấy danh sách đơn hàng của một người dùng cụ thể
 app.get("/api/orders/user/:userId", (req, res) => {
-  // Lọc trong mảng orders những đơn có userId khớp với người đang request
   const userOrders = orders.filter((o) => o.userId == req.params.userId);
   res.json(userOrders);
 });
-const PORT = process.env.PORT || 5000;
 
 // ==========================================
-// CÁC API DÀNH CHO ADMIN
+// 5. NHÓM API QUẢN TRỊ VIÊN (ADMIN)
 // ==========================================
-
-// [ADMIN] Lấy danh sách Users
+// API: Xem toàn bộ danh sách người dùng
 app.get("/api/users", (req, res) => {
   res.json(users);
 });
 
-// [ADMIN] Lấy danh sách Đơn hàng
+// API: Xem toàn bộ danh sách đơn hàng
 app.get("/api/orders", (req, res) => {
   res.json(orders);
 });
 
-// [ADMIN] Xóa người dùng
+// API: Admin xóa người dùng
 app.delete("/api/users/:id", (req, res) => {
   users = users.filter((u) => u.id !== parseInt(req.params.id));
   res.json({ success: true, message: "Đã xóa người dùng" });
 });
 
-// [ADMIN] Cập nhật trạng thái đơn hàng
+// API: Admin cập nhật trạng thái đơn hàng
 app.put("/api/orders/:id/status", (req, res) => {
   const order = orders.find((o) => o.id === req.params.id);
   if (order) {
@@ -145,12 +150,16 @@ app.put("/api/orders/:id/status", (req, res) => {
   }
 });
 
-// [ADMIN] Xóa đơn hàng
+// API: Admin xóa đơn hàng
 app.delete("/api/orders/:id", (req, res) => {
   orders = orders.filter((o) => o.id !== req.params.id);
   res.json({ success: true, message: "Đã xóa đơn hàng" });
 });
 
+// ==========================================
+// 6. KHỞI ĐỘNG SERVER
+// ==========================================
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Backend đang chạy tại: http://localhost:${PORT}`);
 });

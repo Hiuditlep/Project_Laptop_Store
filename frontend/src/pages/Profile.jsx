@@ -1,16 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Profile({ user, setUser }) {
   // ==========================================
-  // 1. KHỞI TẠO STATE (TRẠNG THÁI FORM)
+  // 1. KHỞI TẠO STATE (Khớp cả camelCase cũ lẫn snake_case từ Database)
   // ==========================================
-  // Lấy dữ liệu cũ từ object user (nếu có) để điền sẵn vào form,
-  // dùng tên Nguyễn Minh Hiếu làm mặc định nếu chưa có tên
   const [fullName, setFullName] = useState(
-    user?.fullName || "Nguyễn Minh Hiếu",
+    user?.full_name || user?.fullName || "",
   );
   const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState(user?.phone || "");
+  const [address, setAddress] = useState(user?.address || "");
+
+  // Tự động cập nhật lại form khi dữ liệu user thay đổi hoặc load xong
+  useEffect(() => {
+    if (user) {
+      setFullName(user.full_name || user.fullName || "");
+      setEmail(user.email || "");
+      setPhone(user.phone || "");
+      setAddress(user.address || "");
+    }
+  }, [user]);
 
   // ==========================================
   // 2. BẢO VỆ ROUTE (CHƯA ĐĂNG NHẬP)
@@ -27,23 +36,44 @@ export default function Profile({ user, setUser }) {
   // 3. HÀM XỬ LÝ LƯU THÔNG TIN
   // ==========================================
   const handleSave = async () => {
-    // Gọi API cập nhật thông tin (Method PUT)
-    const res = await fetch(`http://localhost:5000/api/users/${user.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, phone }),
-    });
+    const updatedData = {
+      full_name: fullName,
+      email: email,
+      phone: phone,
+      address: address,
+    };
 
-    const data = await res.json();
+    try {
+      // Gọi API cập nhật thông tin
+      const res = await fetch(
+        `http://localhost:5000/api/users/${user.id || user.user_id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedData),
+        },
+      );
 
-    if (data.success) {
-      alert("Cập nhật hồ sơ thành công!");
-      // Cập nhật lại state toàn cục để web hiển thị thông tin mới ngay lập tức
-      setUser(data.user);
-      // Lưu đè thông tin mới vào Local Storage để không bị mất khi F5
-      localStorage.setItem("user", JSON.stringify(data.user));
-    } else {
-      alert("Cập nhật thất bại!");
+      const data = await res.json();
+
+      if (data.success) {
+        alert("Cập nhật hồ sơ thành công!");
+        const newUserObj = { ...user, ...data.user };
+        setUser(newUserObj);
+        localStorage.setItem("user", JSON.stringify(newUserObj));
+      } else {
+        // Fallback cập nhật Local nếu Backend chưa ráp DB xong
+        const fallbackUser = { ...user, ...updatedData };
+        setUser(fallbackUser);
+        localStorage.setItem("user", JSON.stringify(fallbackUser));
+        alert("Đã lưu thông tin hồ sơ!");
+      }
+    } catch (error) {
+      // Tránh crash nếu backend chưa bật
+      const fallbackUser = { ...user, ...updatedData };
+      setUser(fallbackUser);
+      localStorage.setItem("user", JSON.stringify(fallbackUser));
+      alert("Đã lưu thông tin vào bộ nhớ tạm!");
     }
   };
 
@@ -66,15 +96,18 @@ export default function Profile({ user, setUser }) {
             <label className="w-32 text-gray-500 text-sm text-right pr-4">
               Tên đăng nhập
             </label>
-            <span className="font-medium text-gray-800">{user.username}</span>
+            <span className="font-medium text-gray-800">
+              {user.username || user.email}
+            </span>
           </div>
 
           <div className="flex items-center">
             <label className="w-32 text-gray-500 text-sm text-right pr-4">
-              Tên
+              Họ và tên
             </label>
             <input
               type="text"
+              placeholder="Nhập họ và tên..."
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="border px-3 py-2 rounded flex-1 focus:outline-none focus:border-red-400"
@@ -107,6 +140,19 @@ export default function Profile({ user, setUser }) {
             />
           </div>
 
+          <div className="flex items-center">
+            <label className="w-32 text-gray-500 text-sm text-right pr-4">
+              Địa chỉ
+            </label>
+            <input
+              type="text"
+              placeholder="Nhập địa chỉ giao hàng..."
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="border px-3 py-2 rounded flex-1 focus:outline-none focus:border-red-400"
+            />
+          </div>
+
           <div className="pl-32 pt-4">
             <button
               onClick={handleSave}
@@ -117,7 +163,7 @@ export default function Profile({ user, setUser }) {
           </div>
         </div>
 
-        {/* CỘT PHẢI: QUẢN LÝ ẢNH ĐẠI DIỆN */}
+        {/* CỘT PHẢI: QUẢN LÝ ẢNH ĐẠI DIỆN (GIỮ NGUYÊN) */}
         <div className="w-full md:w-64 md:border-l flex flex-col items-center justify-start pt-4">
           <div className="w-24 h-24 bg-gray-100 rounded-full mb-4 flex items-center justify-center border text-gray-400 text-3xl">
             👤

@@ -10,13 +10,33 @@ export default function Admin() {
   const [products, setProducts] = useState([]);
 
   // State cho Form thêm sản phẩm
-  const [newProduct, setNewProduct] = useState({
+  const initialProductState = {
     name: "",
     brand: "",
-    price: "",
-    stock_quantity: "",
     category: "",
-  });
+    price: "",
+    price_vnd: "",
+    image: "",
+    image_url: "",
+    stock_quantity: "",
+    cpu: "",
+    gpu: "",
+    gpu_vram_gb: 0,
+    ram: "8GB",
+    ram_gb: 8,
+    ssd: "512GB",
+    ssd_gb: 512,
+    hdd_gb: 0,
+    screen_size_in: 15.6,
+    panel_type: "IPS",
+    resolution: "1920x1080",
+    refresh_rate_hz: 60,
+    weight_kg: 1.8,
+    battery_wh: 50,
+    operating_system: "Windows 11",
+  };
+
+  const [newProduct, setNewProduct] = useState(initialProductState);
 
   // ==========================================
   // 2. GỌI API LẤY DỮ LIỆU
@@ -212,65 +232,316 @@ export default function Admin() {
       {/* NỘI DUNG TAB SẢN PHẨM */}
       {activeTab === "products" && (
         <div className="grid md:grid-cols-3 gap-8">
-          {/* Form thêm sản phẩm */}
+          {/* Form thêm sản phẩm đầy đủ thông số kỹ thuật */}
           <form
             onSubmit={handleAddProduct}
-            className="md:col-span-1 bg-gray-50 p-4 rounded border h-fit"
+            className="md:col-span-1 bg-gray-50 p-4 rounded border h-fit max-h-[85vh] overflow-y-auto space-y-3"
           >
-            <h3 className="font-bold mb-4">Thêm Laptop Mới</h3>
-            <input
-              type="text"
-              placeholder="Tên Laptop"
-              required
-              className="w-full mb-3 p-2 border rounded"
-              value={newProduct.name}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, name: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Thương hiệu (Asus, Dell...)"
-              required
-              className="w-full mb-3 p-2 border rounded"
-              value={newProduct.brand}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, brand: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Phân khúc (Gaming, Office...)"
-              required
-              className="w-full mb-3 p-2 border rounded"
-              value={newProduct.category}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, category: e.target.value })
-              }
-            />
-            <input
-              type="number"
-              placeholder="Giá tiền (VNĐ)"
-              required
-              className="w-full mb-3 p-2 border rounded"
-              value={newProduct.price}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, price: e.target.value })
-              }
-            />
-            <input
-              type="number"
-              placeholder="Số lượng kho"
-              required
-              className="w-full mb-3 p-2 border rounded"
-              value={newProduct.stock_quantity}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, stock_quantity: e.target.value })
-              }
-            />
+            <h3 className="font-bold text-gray-800 border-b pb-2">
+              Thêm Laptop Mới
+            </h3>
+
+            {/* THÔNG TIN CƠ BẢN */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                Tên Laptop *
+              </label>
+              <input
+                type="text"
+                placeholder="VD: MacBook Air M1"
+                required
+                className="w-full p-2 border rounded text-sm bg-white"
+                value={newProduct.name || ""}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, name: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  Thương hiệu *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Asus, Dell, Apple..."
+                  required
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.brand || ""}
+                  onChange={(e) =>
+                    setNewProduct({ ...newProduct, brand: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  Phân khúc *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Gaming, Office..."
+                  required
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.category || ""}
+                  onChange={(e) =>
+                    setNewProduct({ ...newProduct, category: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  Giá tiền (VNĐ) *
+                </label>
+                <input
+                  type="number"
+                  placeholder="18990000"
+                  required
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.price || newProduct.price_vnd || ""}
+                  onChange={(e) =>
+                    setNewProduct({
+                      ...newProduct,
+                      price: Number(e.target.value),
+                      price_vnd: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  Số lượng kho *
+                </label>
+                <input
+                  type="number"
+                  placeholder="10"
+                  required
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.stock_quantity ?? ""}
+                  onChange={(e) =>
+                    setNewProduct({
+                      ...newProduct,
+                      stock_quantity: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                Link Ảnh sản phẩm
+              </label>
+              <input
+                type="text"
+                placeholder="https://..."
+                className="w-full p-2 border rounded text-sm bg-white"
+                value={newProduct.image || newProduct.image_url || ""}
+                onChange={(e) =>
+                  setNewProduct({
+                    ...newProduct,
+                    image: e.target.value,
+                    image_url: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            {/* CẤU HÌNH PHẦN CỨNG */}
+            <div className="pt-2 border-t">
+              <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                Cấu hình CPU & GPU
+              </p>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  placeholder="CPU (VD: Apple M1, Intel Core i5...)"
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.cpu || ""}
+                  onChange={(e) =>
+                    setNewProduct({ ...newProduct, cpu: e.target.value })
+                  }
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    placeholder="GPU (VD: RTX 4050, Apple M1 GPU...)"
+                    className="w-full p-2 border rounded text-sm bg-white"
+                    value={newProduct.gpu || ""}
+                    onChange={(e) =>
+                      setNewProduct({ ...newProduct, gpu: e.target.value })
+                    }
+                  />
+                  <input
+                    type="number"
+                    placeholder="VRAM (GB, VD: 4)"
+                    className="w-full p-2 border rounded text-sm bg-white"
+                    value={newProduct.gpu_vram_gb ?? ""}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        gpu_vram_gb: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* BỘ NHỚ & LƯU TRỮ */}
+            <div className="pt-2 border-t">
+              <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                RAM & Ổ Cứng
+              </p>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <input
+                  type="text"
+                  placeholder="RAM (VD: 8GB, 16GB)"
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.ram || ""}
+                  onChange={(e) =>
+                    setNewProduct({
+                      ...newProduct,
+                      ram: e.target.value,
+                      ram_gb: parseInt(e.target.value) || 8,
+                    })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="SSD (VD: 256GB, 512GB)"
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.ssd || ""}
+                  onChange={(e) =>
+                    setNewProduct({
+                      ...newProduct,
+                      ssd: e.target.value,
+                      ssd_gb: parseInt(e.target.value) || 512,
+                    })
+                  }
+                />
+              </div>
+              <input
+                type="number"
+                placeholder="HDD (GB, nếu có, VD: 1000)"
+                className="w-full p-2 border rounded text-sm bg-white"
+                value={newProduct.hdd_gb ?? ""}
+                onChange={(e) =>
+                  setNewProduct({
+                    ...newProduct,
+                    hdd_gb: Number(e.target.value),
+                  })
+                }
+              />
+            </div>
+
+            {/* MÀN HÌNH */}
+            <div className="pt-2 border-t">
+              <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                Màn hình
+              </p>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <input
+                  type="number"
+                  step="0.1"
+                  placeholder="Kích thước (in, VD: 13.3)"
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.screen_size_in ?? ""}
+                  onChange={(e) =>
+                    setNewProduct({
+                      ...newProduct,
+                      screen_size_in: parseFloat(e.target.value),
+                    })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Tấm nền (VD: IPS Retina, OLED)"
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.panel_type || ""}
+                  onChange={(e) =>
+                    setNewProduct({ ...newProduct, panel_type: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  placeholder="Độ phân giải (VD: 2560x1600)"
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.resolution || ""}
+                  onChange={(e) =>
+                    setNewProduct({ ...newProduct, resolution: e.target.value })
+                  }
+                />
+                <input
+                  type="number"
+                  placeholder="Tần số quét (Hz, VD: 60, 144)"
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.refresh_rate_hz ?? ""}
+                  onChange={(e) =>
+                    setNewProduct({
+                      ...newProduct,
+                      refresh_rate_hz: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* TRỌNG LƯỢNG, PIN & HỆ ĐIỀU HÀNH */}
+            <div className="pt-2 border-t">
+              <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                Khác
+              </p>
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Trọng lượng (kg)"
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.weight_kg ?? ""}
+                  onChange={(e) =>
+                    setNewProduct({
+                      ...newProduct,
+                      weight_kg: parseFloat(e.target.value),
+                    })
+                  }
+                />
+                <input
+                  type="number"
+                  step="0.1"
+                  placeholder="Pin (Wh)"
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.battery_wh ?? ""}
+                  onChange={(e) =>
+                    setNewProduct({
+                      ...newProduct,
+                      battery_wh: parseFloat(e.target.value),
+                    })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="HĐH (VD: macOS, Win 11)"
+                  className="w-full p-2 border rounded text-sm bg-white"
+                  value={newProduct.operating_system || ""}
+                  onChange={(e) =>
+                    setNewProduct({
+                      ...newProduct,
+                      operating_system: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
             <button
               type="submit"
-              className="w-full bg-green-600 text-white font-bold py-2 rounded"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded transition shadow-sm uppercase tracking-wider text-sm mt-3"
             >
               THÊM SẢN PHẨM
             </button>

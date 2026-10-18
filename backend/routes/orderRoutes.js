@@ -1,124 +1,149 @@
 const express = require("express");
 const router = express.Router();
+const pool = require("../db");
 
-// Dữ liệu tạm Orders
-let orders = [];
+// Lấy danh sách đơn hàng (Admin)
+router.get("/", async (req, res) => {
+  try {
+    const ordersResult = await pool.query(`
+      SELECT o.*, u.full_name 
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.user_id
+      ORDER BY o.created_at DESC
+    `);
 
-// API: Xem toàn bộ danh sách đơn hàng (Admin)
-router.get("/", (req, res) => {
-  res.json(orders);
+    const itemsResult = await pool.query(`
+      SELECT oi.*, p.name, p.image_url
+      FROM order_items oi
+      LEFT JOIN products p ON oi.product_id = p.product_id
+    `);
+
+    const orders = ordersResult.rows.map((order) => ({
+      ...order,
+      id: order.order_id,
+      userId: order.user_id,
+      total: Number(order.total_amount),
+      customerInfo: {
+        name: order.full_name || "Khách hàng",
+        phone: order.phone,
+        address: order.shipping_address,
+      },
+      items: itemsResult.rows
+        .filter((it) => it.order_id === order.order_id)
+        .map((it) => ({
+          ...it,
+          subtotal: Number(it.quantity) * Number(it.unit_price),
+        })),
+    }));
+
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// API: Lấy danh sách đơn hàng của một người dùng cụ thể
-router.get("/user/:userId", (req, res) => {
-  const userOrders = orders.filter(
-    (o) => String(o.userId) === String(req.params.userId),
-  );
-  res.json(userOrders);
+// Lấy đơn hàng của 1 user
+router.get("/user/:userId", async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT *, order_id AS id, total_amount AS total FROM orders WHERE user_id = $1 ORDER BY created_at DESC",
+      [req.params.userId],
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// API: Khách hàng Đặt hàng (Checkout) - Đầy đủ tương thích và an toàn tuyệt đối
-router.post("/", (req, res) => {
+// Đặt hàng mới (Checkout)
+router.post("/", async (req, res) => {
   const {
     userId,
     user_id,
-    full_name,
     customerInfo,
     phone,
     shipping_address,
     address,
-    note,
     total_amount,
     total,
     items,
   } = req.body;
 
-  // 1. Linh hoạt trích xuất thông tin (hỗ trợ cả form mới lẫn form cũ)
-  const finalName =
-    full_name || customerInfo?.name || customerInfo?.fullName || "Khách hàng";
   const finalPhone = phone || customerInfo?.phone || "";
   const finalAddress =
     shipping_address || address || customerInfo?.address || "";
-  const finalNote = note || customerInfo?.note || "";
   const finalTotal = Number(total_amount || total || 0);
-  const finalUserId = userId || user_id || "guest";
+  const rawUserId = userId || user_id;
+  const validUserId = isNaN(parseInt(rawUserId)) ? null : parseInt(rawUserId);
 
-  // 2. Kiểm tra dữ liệu bắt buộc
   if (!items || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({
-      success: false,
-      message: "Giỏ hàng của bạn đang trống!",
-    });
+    return res.status(400).json({ success: false, message: "Giỏ hàng trống!" });
   }
 
-  if (!finalPhone || !finalAddress) {
-    return res.status(400).json({
-      success: false,
-      message: "Vui lòng nhập đầy đủ số điện thoại và địa chỉ nhận hàng!",
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // 1. Lưu vào bảng orders (order_id tự tăng theo SERIAL)
+    const orderRes = await client.query(
+      `INSERT INTO orders (user_id, total_amount, status, shipping_address, phone)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [validUserId, finalTotal, "Chờ duyệt", finalAddress, finalPhone],
+    );
+    const newOrder = orderRes.rows[0];
+
+    // 2. Lưu từng sản phẩm vào bảng order_items
+    for (const item of items) {
+      const pId = parseInt(item.product_id || item.id);
+      const qty = Number(item.quantity || item.qty || 1);
+      const unitPrice = Number(
+        item.unit_price || item.price_vnd || item.price || 0,
+      );
+
+      await client.query(
+        `INSERT INTO order_items (order_id, product_id, quantity, unit_price)
+         VALUES ($1, $2, $3, $4)`,
+        [newOrder.order_id, isNaN(pId) ? null : pId, qty, unitPrice],
+      );
+    }
+
+    await client.query("COMMIT");
+    res.json({
+      success: true,
+      orderId: newOrder.order_id,
+      order: { ...newOrder, id: newOrder.order_id },
     });
-  }
-
-  const newOrderId = `ORD-${Date.now()}`;
-
-  // 3. Chuẩn hóa đơn hàng: Chứa đồng thời cả field cũ lẫn field mới
-  const newOrder = {
-    id: newOrderId,
-    order_id: newOrderId,
-    userId: finalUserId,
-    user_id: finalUserId,
-    customerInfo: {
-      name: finalName,
-      phone: finalPhone,
-      address: finalAddress,
-      note: finalNote,
-    },
-    shipping_address: finalAddress,
-    phone: finalPhone,
-    total: finalTotal,
-    total_amount: finalTotal,
-    status: "Chờ duyệt",
-    created_at: new Date().toISOString(),
-    items: items.map((it) => ({
-      product_id: it.product_id || it.id,
-      name: it.name || "Sản phẩm",
-      image_url: it.image_url || it.image || "",
-      quantity: Number(it.quantity || it.qty || 1),
-      unit_price: Number(it.unit_price || it.price_vnd || it.price || 0),
-      subtotal:
-        Number(it.quantity || it.qty || 1) *
-        Number(it.unit_price || it.price_vnd || it.price || 0),
-    })),
-  };
-
-  orders.unshift(newOrder); // Đưa đơn mới lên đầu danh sách
-
-  return res.json({
-    success: true,
-    message: "Tạo đơn hàng thành công!",
-    orderId: newOrderId,
-    order: newOrder,
-  });
-});
-
-// API: Admin cập nhật trạng thái đơn hàng
-router.put("/:id/status", (req, res) => {
-  const { status } = req.body;
-  const order = orders.find((o) => o.id === req.params.id);
-
-  if (order) {
-    order.status = status;
-    res.json({ success: true, order });
-  } else {
-    res
-      .status(404)
-      .json({ success: false, message: "Không tìm thấy đơn hàng" });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Lỗi tạo đơn hàng:", error);
+    res.status(500).json({ success: false, message: error.message });
+  } finally {
+    client.release();
   }
 });
 
-// [ADMIN] Xóa đơn hàng vĩnh viễn
-router.delete("/:id", (req, res) => {
-  orders = orders.filter((o) => o.id !== req.params.id);
-  res.json({ success: true, message: "Đã xóa đơn hàng" });
+// Cập nhật trạng thái đơn hàng (Admin)
+router.put("/:id/status", async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "UPDATE orders SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE order_id = $2 RETURNING *",
+      [req.body.status, req.params.id],
+    );
+    res.json({ success: true, order: rows[0] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Xóa đơn hàng (Admin)
+router.delete("/:id", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM orders WHERE order_id = $1", [req.params.id]);
+    res.json({ success: true, message: "Đã xóa đơn hàng" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 module.exports = router;

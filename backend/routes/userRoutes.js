@@ -1,116 +1,147 @@
 const express = require("express");
 const router = express.Router();
+const pool = require("../db");
 
-// Dữ liệu tạm User
-let users = [
-  {
-    id: "1",
-    username: "admin",
-    email: "admin@gmail.com",
-    password: "123456",
-    full_name: "Quản trị viên",
-    phone: "0900000000",
-    address: "Hồ Chí Minh",
-    role: "admin",
-  },
-];
-
-// API: Xem toàn bộ danh sách người dùng (Admin)
-router.get("/", (req, res) => {
-  res.json(users);
+// Lấy toàn bộ users (Admin)
+router.get("/", async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT user_id, user_id AS id, full_name, email, phone, address, role, created_at FROM users ORDER BY user_id ASC",
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// [AUTH] Đăng ký tài khoản (Hứng đủ các trường theo DB: full_name, phone, address)
-router.post("/register", (req, res) => {
-  const { username, password, full_name, phone, address } = req.body;
+// Đăng ký
+router.post("/register", async (req, res) => {
+  const { username, email, password, full_name, phone, address } = req.body;
+  const rawInput = (email || username || "").trim();
 
-  if (!username || !password) {
+  if (!rawInput || !password) {
     return res.status(400).json({
       success: false,
-      message: "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!",
+      message: "Vui lòng nhập đầy đủ email/tên đăng nhập và mật khẩu!",
     });
   }
 
-  // 1. Kiểm tra tài khoản đã tồn tại chưa
-  const userExists = users.find(
-    (u) =>
-      u.username?.toLowerCase() === username.toLowerCase() ||
-      u.email?.toLowerCase() === username.toLowerCase(),
-  );
+  const finalEmail = rawInput.includes("@")
+    ? rawInput
+    : `${rawInput}@gmail.com`;
 
-  if (userExists) {
-    return res.status(400).json({
-      success: false,
-      message: "Tài khoản hoặc email đã tồn tại! Vui lòng đăng nhập.",
-    });
-  }
+  try {
+    const existCheck = await pool.query(
+      "SELECT * FROM users WHERE LOWER(email) = LOWER($1)",
+      [finalEmail],
+    );
 
-  // 2. Lưu đầy đủ thông tin vào mảng users
-  const isUserAdmin = username.toLowerCase() === "admin";
-  const newUser = {
-    id: Date.now().toString(),
-    username: username,
-    email: username.includes("@") ? username : `${username}@gmail.com`,
-    password: password,
-    full_name: full_name || username,
-    phone: phone || "",
-    address: address || "",
-    role: isUserAdmin ? "admin" : "user",
-  };
+    if (existCheck.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Tài khoản hoặc email đã tồn tại!",
+      });
+    }
 
-  users.push(newUser);
-  res.json({ success: true, user: newUser });
-});
+    const role =
+      rawInput.toLowerCase() === "admin" ||
+      finalEmail.toLowerCase() === "admin@gmail.com"
+        ? "admin"
+        : "user";
 
-// [AUTH] Đăng nhập
-router.post("/login", (req, res) => {
-  const { username, password } = req.body;
+    const insertQuery = `
+      INSERT INTO users (full_name, email, password_hash, phone, address, role)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING user_id, user_id AS id, full_name, email, phone, address, role;
+    `;
+    const { rows } = await pool.query(insertQuery, [
+      full_name || rawInput,
+      finalEmail,
+      password,
+      phone || "",
+      address || "",
+      role,
+    ]);
 
-  // Kiểm tra tên đăng nhập hoặc email và mật khẩu
-  const user = users.find(
-    (u) =>
-      (u.username?.toLowerCase() === username?.toLowerCase() ||
-        u.email?.toLowerCase() === username?.toLowerCase()) &&
-      u.password === password,
-  );
-
-  if (user) {
-    res.json({ success: true, user });
-  } else {
-    res.status(401).json({
-      success: false,
-      message: "Tài khoản chưa đăng ký hoặc sai mật khẩu!",
-    });
+    res.json({ success: true, user: { ...rows[0], username: rows[0].email } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// API: Cập nhật thông tin cá nhân (Hồ sơ)
-router.put("/:id", (req, res) => {
+// Đăng nhập
+router.post("/login", async (req, res) => {
+  const { username, email, password } = req.body;
+  const loginInput = (username || email || "").trim();
+
+  try {
+    const query = `
+      SELECT user_id, user_id AS id, full_name, email, phone, address, role
+      FROM users 
+      WHERE (LOWER(email) = LOWER($1) OR LOWER(SPLIT_PART(email, '@', 1)) = LOWER($1))
+      AND password_hash = $2
+    `;
+    const { rows } = await pool.query(query, [loginInput, password]);
+
+    if (rows.length > 0) {
+      const user = { ...rows[0], username: rows[0].email };
+      res.json({ success: true, user });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Tài khoản chưa đăng ký hoặc sai mật khẩu!",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Cập nhật hồ sơ
+router.put("/:id", async (req, res) => {
   const { full_name, fullName, email, phone, address } = req.body;
-  const userIndex = users.findIndex(
-    (u) => String(u.id) === String(req.params.id),
-  );
+  try {
+    const updateQuery = `
+      UPDATE users 
+      SET full_name = COALESCE($1, full_name),
+          email = COALESCE($2, email),
+          phone = COALESCE($3, phone),
+          address = COALESCE($4, address),
+          updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $5
+      RETURNING user_id, user_id AS id, full_name, email, phone, address, role;
+    `;
+    const { rows } = await pool.query(updateQuery, [
+      full_name || fullName,
+      email,
+      phone,
+      address,
+      req.params.id,
+    ]);
 
-  if (userIndex !== -1) {
-    users[userIndex] = {
-      ...users[userIndex],
-      full_name: full_name || fullName || users[userIndex].full_name,
-      email: email || users[userIndex].email,
-      phone: phone !== undefined ? phone : users[userIndex].phone,
-      address: address !== undefined ? address : users[userIndex].address,
-    };
-    res.json({ success: true, user: users[userIndex] });
-  } else {
-    res
-      .status(404)
-      .json({ success: false, message: "Không tìm thấy người dùng" });
+    if (rows.length > 0) {
+      res.json({
+        success: true,
+        user: { ...rows[0], username: rows[0].email },
+      });
+    } else {
+      res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy người dùng" });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// API: Admin xóa người dùng
-router.delete("/:id", (req, res) => {
-  users = users.filter((u) => String(u.id) !== String(req.params.id));
-  res.json({ success: true, message: "Đã xóa người dùng" });
+// Xóa user
+router.delete("/:id", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM users WHERE user_id = $1", [req.params.id]);
+    res.json({ success: true, message: "Đã xóa người dùng" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 module.exports = router;

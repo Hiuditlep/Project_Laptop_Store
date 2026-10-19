@@ -34,7 +34,7 @@ export default function Detail({ addToCart }) {
       {/* CỘT TRÁI: ẢNH SẢN PHẨM */}
       <div className="md:w-1/2 flex items-center justify-center">
         <img
-          src={product.image}
+          src={product.image || product.image_url}
           alt={product.name}
           className="w-full rounded-lg border object-cover"
         />
@@ -49,12 +49,12 @@ export default function Detail({ addToCart }) {
           <span className="font-bold text-gray-800">{product.brand}</span>
         </p>
 
-        {/* THÊM MỚI: HIỂN THỊ TÌNH TRẠNG KHO */}
+        {/* TÌNH TRẠNG KHO */}
         <p className="text-gray-500 mb-2">
           Tình trạng:{" "}
-          {product.stock_quantity > 0 ? (
+          {(product.stock_quantity ?? 10) > 0 ? (
             <span className="font-bold text-green-600">
-              Còn hàng ({product.stock_quantity})
+              Còn hàng ({product.stock_quantity ?? 10})
             </span>
           ) : (
             <span className="font-bold text-red-600">Tạm hết hàng</span>
@@ -62,13 +62,13 @@ export default function Detail({ addToCart }) {
         </p>
 
         <p className="text-red-600 text-3xl font-bold mb-6">
-          {product.price.toLocaleString("vi-VN")} đ
+          {(product.price_vnd || product.price || 0).toLocaleString("vi-VN")} đ
         </p>
 
-        {/* Bảng cấu hình chi tiết (Đã map đầy đủ theo Database ERD) */}
+        {/* Bảng cấu hình chi tiết (Đã map chuẩn xác theo Database PostgreSQL / CSV) */}
         <div className="bg-gray-50 p-5 rounded-lg mb-6 border">
           <h3 className="font-bold mb-3 text-lg border-b border-gray-200 pb-2 uppercase">
-            Cấu hình chi tiết
+Cấu hình chi tiết
           </h3>
           <ul className="space-y-3 text-sm">
             <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
@@ -86,60 +86,62 @@ export default function Detail({ addToCart }) {
 
             <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
               <span className="text-gray-500">RAM:</span>
-              <span className="font-semibold text-right">{product.ram}</span>
+              <span className="font-semibold text-right">
+                {product.ram_gb ? `${product.ram_gb} GB` : "Đang cập nhật"}
+              </span>
             </li>
 
             <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
               <span className="text-gray-500">Ổ cứng:</span>
               <span className="font-semibold text-right">
-                {product.ssd}{" "}
-                {product.hdd_gb > 0 ? ` + ${product.hdd_gb}GB HDD` : ""}
+                {product.ssd_gb ? `${product.ssd_gb} GB SSD` : ""}
+                {product.hdd_gb && Number(product.hdd_gb) > 0 ? ` + ${product.hdd_gb}GB HDD` : ""}
+                {!product.ssd_gb && (!product.hdd_gb || Number(product.hdd_gb) <= 0) ? "Đang cập nhật" : ""}
               </span>
             </li>
 
             <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
               <span className="text-gray-500">Màn hình:</span>
               <span className="font-semibold text-right">
-                {product.screen_size_in}" {product.panel_type} (
-                {product.resolution}) - {product.refresh_rate_hz}Hz
+                {product.screen_size_in ? `${product.screen_size_in}"` : ""} {product.panel_type || ""} {product.resolution ? `(${product.resolution})` : ""} {product.refresh_rate_hz ? `- ${product.refresh_rate_hz}Hz` : ""}
               </span>
             </li>
 
             <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
               <span className="text-gray-500">Trọng lượng:</span>
               <span className="font-semibold text-right">
-                {product.weight_kg} kg
+                {product.weight_kg ? `${product.weight_kg} kg` : "Đang cập nhật"}
               </span>
             </li>
 
             <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
               <span className="text-gray-500">Pin & Hệ điều hành:</span>
               <span className="font-semibold text-right">
-                {product.battery_wh}Wh | {product.operating_system}
+                {product.battery_wh ? `${product.battery_wh}Wh` : "N/A"} | {product.operating_system || "Windows 11"}
               </span>
             </li>
 
             <li className="flex justify-between pb-1 mt-2 pt-1">
               <span className="text-gray-500">Phân khúc:</span>
-              <span className="font-semibold text-right uppercase text-blue-600">
+<span className="font-semibold text-right uppercase text-blue-600">
                 {product.category}
               </span>
             </li>
           </ul>
         </div>
 
-        {/* Cụm nút bấm đã được nâng cấp logic khóa nút khi hết hàng */}
+        {/* Cụm nút bấm */}
         <div className="flex gap-4 mt-8">
           <button
             onClick={() => addToCart(product)}
-            disabled={product.stock_quantity <= 0}
+            disabled={(product.stock_quantity ?? 10) <= 0}
             className={`flex-1 py-3 rounded-lg font-bold transition ${
-              product.stock_quantity > 0
+              (product.stock_quantity ?? 10) > 0
                 ? "bg-red-600 text-white hover:bg-red-700"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
           >
-            {product.stock_quantity > 0 ? "THÊM VÀO GIỎ HÀNG" : "ĐÃ HẾT HÀNG"}
+            {(product.stock_quantity ?? 10) > 0 ? "THÊM VÀO GIỎ HÀNG" : "ĐÃ HẾT HÀNG"}
           </button>
           <button
             onClick={() => navigate(-1)}

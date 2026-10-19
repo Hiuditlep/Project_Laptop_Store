@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Link, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  useNavigate,
+} from "react-router-dom";
 
+// COMPONENTS BÊN TRONG
+import MegaMenu from "./components/MegaMenu";
+
+// PAGES
 import Home from "./pages/Home";
 import Detail from "./pages/Detail";
 import Cart from "./pages/Cart";
@@ -11,94 +21,6 @@ import Profile from "./pages/Profile";
 import MyOrders from "./pages/MyOrders";
 import SearchPage from "./pages/SearchPage";
 
-// ==========================================
-// DATA MẪU CHO MEGA MENU (Sau này có thể gọi từ API)
-// ==========================================
-const megaMenuData = [
-  {
-    id: "asus",
-    name: "Asus",
-    categories: [
-      {
-        title: "Laptop Gaming",
-        items: [
-          { name: "Asus ROG Strix G15", link: "/product/1" },
-          { name: "Asus ROG Strix G15 (AMD)", link: "/product/3" },
-          { name: "Asus TUF Gaming F15", link: "/search?q=TUF" }
-        ]
-      },
-      {
-        title: "Laptop Văn phòng",
-        items: [
-          { name: "Asus Zenbook 14 OLED", link: "/search?q=Zenbook" },
-          { name: "Asus Vivobook 15", link: "/search?q=Vivobook" }
-        ]
-      }
-    ]
-  },
-  {
-    id: "apple",
-    name: "Apple (MacBook)",
-    categories: [
-      {
-        title: "MacBook Air",
-        items: [
-          { name: "MacBook Air M1", link: "/product/2" },
-          { name: "MacBook Air M2", link: "/search?q=Air M2" },
-          { name: "MacBook Air M3", link: "/search?q=Air M3" }
-        ]
-      },
-      {
-        title: "MacBook Pro",
-        items: [
-          { name: "MacBook Pro 14 inch", link: "/search?q=Pro 14" },
-          { name: "MacBook Pro 16 inch", link: "/search?q=Pro 16" }
-        ]
-      }
-    ]
-  },
-  {
-    id: "dell",
-    name: "Dell",
-    categories: [
-      {
-        title: "Gaming & Đồ họa",
-        items: [
-          { name: "Dell Alienware", link: "/search?q=Alienware" },
-          { name: "Dell G15 Gaming", link: "/search?q=G15" }
-        ]
-      },
-      {
-        title: "Cao cấp & Doanh nhân",
-        items: [
-          { name: "Dell XPS 13", link: "/search?q=XPS" },
-          { name: "Dell Latitude", link: "/search?q=Latitude" }
-        ]
-      }
-    ]
-  },
-  {
-    id: "lenovo",
-    name: "Lenovo",
-    categories: [
-      {
-        title: "Lenovo Gaming",
-        items: [
-          { name: "Lenovo Legion 5", link: "/search?q=Legion" },
-          { name: "Lenovo LOQ", link: "/search?q=LOQ" }
-        ]
-      },
-      {
-        title: "Học tập & Văn phòng",
-        items: [
-          { name: "Lenovo IdeaPad", link: "/search?q=IdeaPad" },
-          { name: "Lenovo ThinkPad", link: "/search?q=ThinkPad" }
-        ]
-      }
-    ]
-  }
-];
-
 function AppContent() {
   const [cart, setCart] = useState([]);
   const [searchInput, setSearchInput] = useState("");
@@ -108,10 +30,9 @@ function AppContent() {
     () => JSON.parse(localStorage.getItem("user")) || null,
   );
 
-  // === STATE CHO TÍNH NĂNG GỢI Ý VÀ MENU ===
+  // === STATE CHO TÍNH NĂNG GỢI Ý ===
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [hoveredBrand, setHoveredBrand] = useState("asus"); // Quản lý hãng đang được hover trong Menu
 
   useEffect(() => {
     if (searchInput.trim().length > 0) {
@@ -131,27 +52,22 @@ function AppContent() {
   };
 
   const addToCart = (product) => {
-    // 1. NGƯỜI GÁC CỔNG: Kiểm tra xem đã đăng nhập chưa
     if (!user) {
       alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
-      navigate("/auth"); // Bế thẳng sang trang đăng nhập
-      return; // Lệnh return này rất quan trọng, nó sẽ dừng toàn bộ code bên dưới, không cho thêm vào giỏ
+      navigate("/auth");
+      return;
     }
-
-    // 2. Kiểm tra hàng trong kho
     if (product.stock_quantity <= 0) {
       alert("Sản phẩm này đã tạm hết hàng!");
       return;
     }
 
-    // 3. Kiểm tra giới hạn số lượng trong giỏ
     const existingItem = cart.find((item) => item.id === product.id);
     if (existingItem && existingItem.qty >= product.stock_quantity) {
       alert(`Rất tiếc, kho chỉ còn tối đa ${product.stock_quantity} sản phẩm!`);
       return;
     }
 
-    // 4. Nếu qua hết các vòng kiểm tra trên thì mới cho vào giỏ
     setCart((prevCart) => {
       const itemInCart = prevCart.find((item) => item.id === product.id);
       if (itemInCart) {
@@ -173,11 +89,16 @@ function AppContent() {
         alert(`Kho chỉ còn ${itemToUpdate.stock_quantity} sản phẩm!`);
         return;
       }
-      setCart((prevCart) => prevCart.map((item) => item.id === id ? { ...item, qty: newQty } : item));
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.id === id ? { ...item, qty: newQty } : item,
+        ),
+      );
     }
   };
 
-  const removeFromCart = (id) => setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+  const removeFromCart = (id) =>
+    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
   const clearCart = () => setCart([]);
 
   const handleSearchSubmit = (e) => {
@@ -188,89 +109,30 @@ function AppContent() {
     }
   };
 
-  // Lấy data của hãng đang được trỏ chuột vào
-  const activeBrandData = megaMenuData.find((b) => b.id === hoveredBrand);
-
   return (
     <div className="min-h-screen bg-gray-100 font-sans w-full">
       <header className="bg-red-600 text-white p-3 shadow-md sticky top-0 z-50 w-full">
         <div className="w-full px-4 md:px-8 mx-auto flex justify-between items-center gap-6 h-full">
-          
           {/* CỤM 1: LOGO & DANH MỤC */}
           <div className="flex items-center gap-4">
-            {/* Logo đẩy nhẹ sang phải, xóa chữ, căn giữa */}
-            <Link to="/" className="flex items-center justify-center hover:opacity-80 transition-opacity h-full">
-              <img src="/Logo.png" alt="Logo" className="h-10 w-auto object-contain" />
+            <Link
+              to="/"
+              className="flex items-center justify-center hover:opacity-80 transition-opacity h-full"
+            >
+              <img
+                src="/Logo.png"
+                alt="Logo"
+                className="h-10 w-auto object-contain"
+              />
             </Link>
 
-            {/* NÚT DANH MỤC & MEGA MENU */}
-            <div className="relative group flex items-center h-full">
-              <button className="flex items-center gap-2 bg-black/20 hover:bg-black/30 px-4 py-2.5 rounded-lg font-medium transition whitespace-nowrap cursor-pointer">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
-                Danh mục
-              </button>
-              
-              {/* Cầu nối vô hình */}
-              <div className="absolute top-full left-0 w-full h-4 bg-transparent"></div>
-
-              {/* Box Mega Menu (Dùng React State thay cho CSS hover) */}
-              <div className="absolute top-[calc(100%+8px)] left-0 w-[800px] min-h-[400px] bg-white text-black shadow-2xl rounded-lg hidden group-hover:flex border border-gray-100 z-50 overflow-hidden cursor-default transition-all duration-300">
-                
-                {/* Cột trái: Tên các Thương hiệu */}
-                <div className="w-1/4 bg-gray-50 border-r flex flex-col py-4">
-                  <h3 className="px-5 pb-3 font-bold text-gray-800 border-b border-gray-200">Thương hiệu</h3>
-                  <ul className="flex-1 mt-2">
-                    {megaMenuData.map((brand) => (
-                      <li
-                        key={brand.id}
-                        onMouseEnter={() => setHoveredBrand(brand.id)}
-                        className={`px-5 py-3 font-medium cursor-pointer transition-colors border-l-4 ${
-                          hoveredBrand === brand.id
-                            ? "bg-white text-red-600 border-red-600 shadow-sm"
-                            : "border-transparent hover:text-red-600"
-                        }`}
-                      >
-                        {brand.name}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Cột phải: Content máy & Dòng máy */}
-                <div className="w-3/4 bg-white p-6 overflow-y-auto">
-                  {activeBrandData && (
-                    <div className="grid grid-cols-2 gap-8">
-                      {activeBrandData.categories.map((cat, index) => (
-                        <div key={index}>
-                          <h4 className="font-bold text-red-600 mb-3 border-b border-red-100 pb-2">
-                            {cat.title}
-                          </h4>
-                          <ul className="space-y-3">
-                            {cat.items.map((item, idx) => (
-                              <li key={idx}>
-                                <Link 
-                                  to={item.link} 
-                                  className="text-sm font-semibold text-gray-700 hover:text-red-600 transition"
-                                >
-                                  {item.name}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            {/* Gọi Component MegaMenu đã tách ra */}
+            <MegaMenu />
           </div>
 
-          {/* CỤM 2: THANH TÌM KIẾM ĐƯỢC KÉO TO RA (flex-1 max-w-3xl) */}
-          <form 
-            onSubmit={handleSearchSubmit} 
+          {/* CỤM 2: THANH TÌM KIẾM ĐƯỢC KÉO TO RA */}
+          <form
+            onSubmit={handleSearchSubmit}
             className="flex-1 w-full max-w-3xl relative flex flex-col"
           >
             <div className="relative w-full">
@@ -287,8 +149,18 @@ function AppContent() {
                 type="submit"
                 className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 hover:text-red-600 transition"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
                 </svg>
               </button>
             </div>
@@ -301,21 +173,33 @@ function AppContent() {
                 </div>
                 {searchSuggestions.length > 0 ? (
                   <ul className="max-h-80 overflow-y-auto">
-                    {searchSuggestions.map(p => (
-                      <li key={p.id} className="hover:bg-gray-50 border-b last:border-b-0 transition">
-                        <div 
+                    {searchSuggestions.map((p) => (
+                      <li
+                        key={p.id}
+                        className="hover:bg-gray-50 border-b last:border-b-0 transition"
+                      >
+                        <div
                           onClick={() => {
                             navigate(`/product/${p.id}`);
                             setSearchInput("");
                             setShowSuggestions(false);
-                          }} 
+                          }}
                           className="flex gap-4 p-3 cursor-pointer items-center"
                         >
-                          <img src={p.image} alt={p.name} className="w-12 h-12 object-contain rounded" />
+                          <img
+                            src={p.image_url || p.image}
+                            alt={p.name}
+                            className="w-12 h-12 object-contain rounded"
+                          />
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-gray-800 line-clamp-1">{p.name}</p>
+                            <p className="text-sm font-semibold text-gray-800 line-clamp-1">
+                              {p.name}
+                            </p>
                             <p className="text-red-600 font-bold text-sm mt-0.5">
-                              {p.price.toLocaleString("vi-VN")} đ
+                              {(p.price_vnd || p.price || 0).toLocaleString(
+                                "vi-VN",
+                              )}{" "}
+                              đ
                             </p>
                           </div>
                         </div>
@@ -337,28 +221,71 @@ function AppContent() {
               {user ? (
                 <li className="relative group py-2 cursor-pointer">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm">👤</div>
-                    <span className="font-medium hover:text-gray-200">{user.username}</span>
+                    <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm">
+                      👤
+                    </div>
+                    <span className="font-medium hover:text-gray-200">
+                      {user.username}
+                    </span>
                   </div>
                   <div className="absolute right-0 top-full mt-0 w-48 bg-white text-black shadow-lg rounded-sm overflow-hidden hidden group-hover:block z-50 border">
-                    <Link to="/profile" className="block px-4 py-3 text-sm hover:bg-gray-100 transition">Tài Khoản Của Tôi</Link>
-                    <Link to="/my-orders" className="block px-4 py-3 text-sm hover:bg-gray-100 transition">Đơn Mua</Link>
-                    <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 transition text-red-600">Đăng Xuất</button>
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-3 text-sm hover:bg-gray-100 transition"
+                    >
+                      Tài Khoản Của Tôi
+                    </Link>
+                    <Link
+                      to="/my-orders"
+                      className="block px-4 py-3 text-sm hover:bg-gray-100 transition"
+                    >
+                      Đơn Mua
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 transition text-red-600"
+                    >
+                      Đăng Xuất
+                    </button>
                   </div>
                 </li>
               ) : (
-                <li><Link to="/auth" className="hover:underline font-medium">Đăng nhập</Link></li>
+                <li>
+                  <Link to="/auth" className="hover:underline font-medium">
+                    Đăng nhập
+                  </Link>
+                </li>
               )}
 
               {user?.role === "admin" && (
                 <li>
-                  <Link to="/admin" className="font-bold text-yellow-300 hover:text-white transition bg-red-800 px-3 py-1.5 rounded text-sm">Admin Panel</Link>
+                  <Link
+                    to="/admin"
+                    className="font-bold text-yellow-300 hover:text-white transition bg-red-800 px-3 py-1.5 rounded text-sm"
+                  >
+                    Admin Panel
+                  </Link>
                 </li>
               )}
 
               <li>
-                <Link to="/cart" className="flex items-center gap-2 bg-black/20 px-4 py-2 rounded-lg hover:bg-black/30 transition">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <Link
+                  to="/cart"
+                  className="flex items-center gap-2 bg-black/20 px-4 py-2 rounded-lg hover:bg-black/30 transition"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    ></path>
+                  </svg>
                   <span className="hidden sm:inline">Giỏ hàng</span>
                   <span className="bg-yellow-400 text-black px-2 py-0.5 rounded-full text-xs font-bold">
                     {cart.reduce((sum, item) => sum + item.qty, 0)}
@@ -367,20 +294,43 @@ function AppContent() {
               </li>
             </ul>
           </nav>
-
         </div>
       </header>
 
       <main className="w-full px-4 md:px-8 mt-6">
         <Routes>
-          <Route path="/" element={<Home addToCart={addToCart} searchTerm="" />} />
-          <Route path="/search" element={<SearchPage addToCart={addToCart} />} />
-          <Route path="/product/:id" element={<Detail addToCart={addToCart} />} />
-          <Route path="/cart" element={<Cart cart={cart} updateQuantity={updateQuantity} removeFromCart={removeFromCart} />} />
+          <Route
+            path="/"
+            element={<Home addToCart={addToCart} searchTerm="" />}
+          />
+          <Route
+            path="/search"
+            element={<SearchPage addToCart={addToCart} />}
+          />
+          <Route
+            path="/product/:id"
+            element={<Detail addToCart={addToCart} />}
+          />
+          <Route
+            path="/cart"
+            element={
+              <Cart
+                cart={cart}
+                updateQuantity={updateQuantity}
+                removeFromCart={removeFromCart}
+              />
+            }
+          />
           <Route path="/auth" element={<Auth setUser={setUser} />} />
-          <Route path="/checkout" element={<Checkout cart={cart} user={user} clearCart={clearCart} />} />
+          <Route
+            path="/checkout"
+            element={<Checkout cart={cart} user={user} clearCart={clearCart} />}
+          />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/profile" element={<Profile user={user} setUser={setUser} />} />
+          <Route
+            path="/profile"
+            element={<Profile user={user} setUser={setUser} />}
+          />
           <Route path="/my-orders" element={<MyOrders user={user} />} />
         </Routes>
       </main>

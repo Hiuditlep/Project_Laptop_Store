@@ -1,4 +1,3 @@
-megamenu
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
@@ -81,7 +80,7 @@ export default function MegaMenu() {
 
       {/* Box Mega Menu */}
       <div className="absolute top-[calc(100%+8px)] left-0 w-[800px] min-h-[400px] bg-white text-black shadow-2xl rounded-lg hidden group-hover:flex border border-gray-100 z-50 overflow-hidden cursor-default transition-all duration-300">
-{/* Cột trái: Tên các Thương hiệu */}
+        {/* Cột trái: Tên các Thương hiệu */}
         <div className="w-1/4 bg-gray-50 border-r flex flex-col py-4">
           <h3 className="px-5 pb-3 font-bold text-gray-800 border-b border-gray-200">
             Thương hiệu

@@ -1,4 +1,3 @@
-app
 import { useState, useEffect } from "react";
 import {
   BrowserRouter,
@@ -101,7 +100,8 @@ function AppContent() {
   const removeFromCart = (id) =>
     setCart((prevCart) => prevCart.filter((item) => item.id !== id));
   const clearCart = () => setCart([]);
-const handleSearchSubmit = (e) => {
+
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchInput.trim() !== "") {
       setShowSuggestions(false);
@@ -172,7 +172,7 @@ const handleSearchSubmit = (e) => {
                   Sản phẩm đề xuất
                 </div>
                 {searchSuggestions.length > 0 ? (
-<ul className="max-h-80 overflow-y-auto">
+                  <ul className="max-h-80 overflow-y-auto">
                     {searchSuggestions.map((p) => (
                       <li
                         key={p.id}
@@ -239,7 +239,7 @@ const handleSearchSubmit = (e) => {
                       to="/my-orders"
                       className="block px-4 py-3 text-sm hover:bg-gray-100 transition"
                     >
-Đơn Mua
+                      Đơn Mua
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -326,7 +326,7 @@ const handleSearchSubmit = (e) => {
             path="/checkout"
             element={<Checkout cart={cart} user={user} clearCart={clearCart} />}
           />
-<Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={<Admin />} />
           <Route
             path="/profile"
             element={<Profile user={user} setUser={setUser} />}

@@ -96,7 +96,73 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+// Đổi mật khẩu
+router.post("/change-password", async (req, res) => {
+  const { user_id, current_password, new_password } = req.body;
 
+  if (!user_id || !current_password || !new_password) {
+    return res.status(400).json({
+      success: false,
+      message: "Vui lòng nhập đầy đủ thông tin!",
+    });
+  }
+
+  if (new_password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: "Mật khẩu mới phải có ít nhất 6 ký tự!",
+    });
+  }
+
+  if (current_password === new_password) {
+    return res.status(400).json({
+      success: false,
+      message: "Mật khẩu mới phải khác mật khẩu hiện tại!",
+    });
+  }
+
+  try {
+    // Kiểm tra mật khẩu hiện tại
+    const checkQuery = `
+      SELECT user_id
+      FROM users
+      WHERE user_id = $1
+      AND password_hash = $2
+    `;
+
+    const checkResult = await pool.query(checkQuery, [
+      user_id,
+      current_password,
+    ]);
+
+    if (checkResult.rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Mật khẩu hiện tại không chính xác!",
+      });
+    }
+
+    // Cập nhật mật khẩu mới
+    const updateQuery = `
+      UPDATE users
+      SET password_hash = $1,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $2
+    `;
+
+    await pool.query(updateQuery, [new_password, user_id]);
+
+    res.json({
+      success: true,
+      message: "Đổi mật khẩu thành công!",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 // Cập nhật hồ sơ
 router.put("/:id", async (req, res) => {
   const { full_name, fullName, email, phone, address } = req.body;

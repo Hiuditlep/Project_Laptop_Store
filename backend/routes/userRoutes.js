@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 
-// 1. Lấy toàn bộ users (Admin)
+// Lấy toàn bộ users (Admin)
 /**
  * @swagger
  * /api/users:
@@ -24,7 +24,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 2. Đăng ký
+// Đăng ký
 /**
  * @swagger
  * /api/users/register:
@@ -108,7 +108,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// 3. Đăng nhập
+// Đăng nhập
 /**
  * @swagger
  * /api/users/login:
@@ -159,7 +159,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// 4. Đổi mật khẩu
+// Đổi mật khẩu
 /**
  * @swagger
  * /api/users/change-password:
@@ -250,7 +250,7 @@ router.post("/change-password", async (req, res) => {
   }
 });
 
-// 5. Cập nhật hồ sơ
+// Cập nhật hồ sơ
 /**
  * @swagger
  * /api/users/{id}:
@@ -318,7 +318,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// 6. Xóa user
+// Xóa user
 /**
  * @swagger
  * /api/users/{id}:

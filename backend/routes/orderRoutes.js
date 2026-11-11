@@ -2,7 +2,17 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 
-// Lấy danh sách đơn hàng (Admin)
+// 1. Lấy danh sách đơn hàng (Admin)
+/**
+ * @swagger
+ * /api/orders:
+ *   get:
+ *     summary: Lấy danh sách toàn bộ đơn hàng (Dành cho Admin)
+ *     tags: [Orders]
+ *     responses:
+ *       200:
+ *         description: Trả về danh sách đơn hàng
+ */
 router.get("/", async (req, res) => {
   try {
     const ordersResult = await pool.query(`
@@ -42,7 +52,24 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Lấy đơn hàng của 1 user
+// 2. Lấy đơn hàng của 1 user
+/**
+ * @swagger
+ * /api/orders/user/{userId}:
+ *   get:
+ *     summary: Lấy danh sách đơn hàng của một người dùng cụ thể
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của người dùng
+ *     responses:
+ *       200:
+ *         description: Trả về danh sách đơn hàng của user đó
+ */
 router.get("/user/:userId", async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -55,7 +82,50 @@ router.get("/user/:userId", async (req, res) => {
   }
 });
 
-// Đặt hàng mới (Checkout)
+// 3. Đặt hàng mới (Checkout)
+/**
+ * @swagger
+ * /api/orders:
+ *   post:
+ *     summary: Tạo đơn hàng mới
+ *     tags: [Orders]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 example: 1
+ *               phone:
+ *                 type: string
+ *                 example: "0123456789"
+ *               address:
+ *                 type: string
+ *                 example: "123 Đường ABC, Quận 1, TP.HCM"
+ *               total:
+ *                 type: number
+ *                 example: 39999500
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     product_id:
+ *                       type: number
+ *                       example: 5
+ *                     quantity:
+ *                       type: number
+ *                       example: 1
+ *                     price_vnd:
+ *                       type: number
+ *                       example: 39999500
+ *     responses:
+ *       200:
+ *         description: Đặt hàng thành công
+ */
 router.post("/", async (req, res) => {
   const {
     userId,
@@ -123,7 +193,34 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Cập nhật trạng thái đơn hàng (Admin)
+// 4. Cập nhật trạng thái đơn hàng (Admin)
+/**
+ * @swagger
+ * /api/orders/{id}/status:
+ *   put:
+ *     summary: Cập nhật trạng thái đơn hàng (Dành cho Admin)
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của đơn hàng
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 example: "Đã giao hàng"
+ *     responses:
+ *       200:
+ *         description: Cập nhật trạng thái thành công
+ */
 router.put("/:id/status", async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -136,7 +233,24 @@ router.put("/:id/status", async (req, res) => {
   }
 });
 
-// Xóa đơn hàng (Admin)
+// 5. Xóa đơn hàng (Admin)
+/**
+ * @swagger
+ * /api/orders/{id}:
+ *   delete:
+ *     summary: Xóa đơn hàng (Dành cho Admin)
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của đơn hàng cần xóa
+ *     responses:
+ *       200:
+ *         description: Xóa đơn hàng thành công
+ */
 router.delete("/:id", async (req, res) => {
   try {
     await pool.query("DELETE FROM orders WHERE order_id = $1", [req.params.id]);

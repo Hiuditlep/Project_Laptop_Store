@@ -17,6 +17,22 @@ const BASE_PRODUCT_SELECT = `
 `;
 
 // 1. Lấy danh sách sản phẩm (hỗ trợ tìm kiếm)
+/**
+ * @swagger
+ * /api/products:
+ *   get:
+ *     summary: Lấy danh sách toàn bộ Laptop
+ *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Từ khóa tìm kiếm laptop
+ *     responses:
+ *       200:
+ *         description: Trả về danh sách laptop thành công
+ */
 router.get("/", async (req, res) => {
   const searchQuery = req.query.search;
   try {
@@ -37,6 +53,25 @@ router.get("/", async (req, res) => {
 });
 
 // 2. Lấy chi tiết 1 sản phẩm theo ID
+/**
+ * @swagger
+ * /api/products/{id}:
+ *   get:
+ *     summary: Lấy chi tiết 1 Laptop theo ID
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của Laptop
+ *     responses:
+ *       200:
+ *         description: Trả về chi tiết laptop
+ *       404:
+ *         description: Không tìm thấy sản phẩm
+ */
 router.get("/:id", async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -54,6 +89,35 @@ router.get("/:id", async (req, res) => {
 });
 
 // 3. Admin: Thêm sản phẩm mới (Tự động tìm hoặc tạo brand_id, category_id)
+/**
+ * @swagger
+ * /api/products:
+ *   post:
+ *     summary: Thêm sản phẩm Laptop mới (Dành cho Admin)
+ *     tags: [Products]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Laptop MSI Gaming"
+ *               price_vnd:
+ *                 type: number
+ *                 example: 25000000
+ *               brand:
+ *                 type: string
+ *                 example: "MSI"
+ *               category:
+ *                 type: string
+ *                 example: "Gaming"
+ *     responses:
+ *       200:
+ *         description: Thêm sản phẩm thành công
+ */
 router.post("/", async (req, res) => {
   const p = req.body;
   const client = await pool.connect();
@@ -143,6 +207,23 @@ router.post("/", async (req, res) => {
 });
 
 // 4. Admin: Xóa sản phẩm
+/**
+ * @swagger
+ * /api/products/{id}:
+ *   delete:
+ *     summary: Xóa 1 sản phẩm Laptop (Dành cho Admin)
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của Laptop cần xóa
+ *     responses:
+ *       200:
+ *         description: Đã xóa sản phẩm thành công
+ */
 router.delete("/:id", async (req, res) => {
   try {
     await pool.query("DELETE FROM products WHERE product_id = $1", [

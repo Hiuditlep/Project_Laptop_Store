@@ -36,7 +36,9 @@ function AppContent() {
 
   useEffect(() => {
     if (searchInput.trim().length > 0) {
-      fetch(`http://localhost:5000/api/products?search=${searchInput.trim()}`)
+      fetch(
+        `https://project-laptop-store-9zsr.onrender.com/api/products?search=${searchInput.trim()}`,
+      )
         .then((res) => res.json())
         .then((data) => {
           setSearchSuggestions(data.slice(0, 4));

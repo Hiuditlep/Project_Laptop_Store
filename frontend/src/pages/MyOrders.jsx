@@ -5,7 +5,9 @@ export default function MyOrders({ user }) {
 
   useEffect(() => {
     if (user) {
-      fetch(`http://localhost:5000/api/orders/user/${user.id}`)
+      fetch(
+        `https://project-laptop-store-9zsr.onrender.com/api/orders/user/${user.id}`,
+      )
         .then((res) => res.json())
         .then((data) => {
           // BẢO VỆ 1: Ép kiểu để orders luôn luôn là một mảng, không bao giờ bị sập

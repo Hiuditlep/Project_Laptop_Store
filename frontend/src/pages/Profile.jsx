@@ -76,7 +76,7 @@ export default function Profile({ user, setUser }) {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/users/${user.id || user.user_id}`,
+        `https://project-laptop-store-9zsr.onrender.com/api/users/${user.id || user.user_id}`,
         {
           method: "PUT",
           headers: {
@@ -134,7 +134,7 @@ export default function Profile({ user, setUser }) {
 
     try {
       const res = await fetch(
-        "http://localhost:5000/api/users/change-password",
+        "https://project-laptop-store-9zsr.onrender.com/api/users/change-password",
         {
           method: "POST",
           headers: {

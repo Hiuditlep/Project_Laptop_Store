@@ -80,11 +80,14 @@ export default function Checkout({ cart, user, clearCart }) {
     };
 
     try {
-      const res = await fetch("http://localhost:5000/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
-      });
+      const res = await fetch(
+        "https://project-laptop-store-9zsr.onrender.com/api/orders",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        },
+      );
 
       const data = await res.json();
 

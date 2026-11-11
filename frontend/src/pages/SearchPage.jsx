@@ -9,7 +9,9 @@ export default function SearchPage({ addToCart }) {
 
   useEffect(() => {
     // Gọi API lọc sản phẩm theo từ khóa
-    fetch(`http://localhost:5000/api/products?search=${query}`)
+    fetch(
+      `https://project-laptop-store-9zsr.onrender.com/api/products?search=${query}`,
+    )
       .then((res) => res.json())
       .then((data) => setProducts(data));
   }, [query]);

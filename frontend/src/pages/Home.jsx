@@ -18,7 +18,7 @@ export default function Home({ addToCart, searchTerm }) {
 
   const brandSliderRef = useRef(null);
 
-const categories = [
+  const categories = [
     {
       id: "gaming",
       name: "Gaming",
@@ -52,7 +52,9 @@ const categories = [
   ];
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/products?search=${searchTerm || ""}`)
+    fetch(
+      `https://project-laptop-store-9zsr.onrender.com/api/products?search=${searchTerm || ""}`,
+    )
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -217,23 +219,25 @@ const categories = [
               TẤT CẢ
             </div>
             {brands.map((brand, idx) => (
-            <div 
-              key={idx} 
-              onClick={() => setActiveBrand(brand)} 
-              className={`snap-start shrink-0 w-[140px] h-16 border rounded-lg flex items-center justify-center cursor-pointer transition ${activeBrand === brand ? "border-red-600 bg-red-50" : "border-gray-200 hover:border-red-500"}`}
-            >
-              <img 
-                src={`/Laptop_Logo/${brand}.png`} 
-                alt={brand}
-                className="max-h-8 max-w-[100px] object-contain transition-transform hover:scale-110"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'block';
-                }}
-              />
-              <span className="hidden font-bold uppercase tracking-wider text-gray-700">{brand}</span>
-            </div>
-          ))}
+              <div
+                key={idx}
+                onClick={() => setActiveBrand(brand)}
+                className={`snap-start shrink-0 w-[140px] h-16 border rounded-lg flex items-center justify-center cursor-pointer transition ${activeBrand === brand ? "border-red-600 bg-red-50" : "border-gray-200 hover:border-red-500"}`}
+              >
+                <img
+                  src={`/Laptop_Logo/${brand}.png`}
+                  alt={brand}
+                  className="max-h-8 max-w-[100px] object-contain transition-transform hover:scale-110"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "block";
+                  }}
+                />
+                <span className="hidden font-bold uppercase tracking-wider text-gray-700">
+                  {brand}
+                </span>
+              </div>
+            ))}
           </div>
 
           <button

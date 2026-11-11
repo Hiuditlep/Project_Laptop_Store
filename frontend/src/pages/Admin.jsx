@@ -42,13 +42,13 @@ export default function Admin() {
   // 2. GỌI API LẤY DỮ LIỆU
   // ==========================================
   const fetchData = () => {
-    fetch("http://localhost:5000/api/users")
+    fetch("https://project-laptop-store-9zsr.onrender.com/api/users")
       .then((res) => res.json())
       .then((data) => setUsers(data));
-    fetch("http://localhost:5000/api/orders")
+    fetch("https://project-laptop-store-9zsr.onrender.com/api/orders")
       .then((res) => res.json())
       .then((data) => setOrders(data));
-    fetch("http://localhost:5000/api/products")
+    fetch("https://project-laptop-store-9zsr.onrender.com/api/products")
       .then((res) => res.json())
       .then((data) => setProducts(data));
   };
@@ -62,7 +62,7 @@ export default function Admin() {
   // ==========================================
   const handleAddProduct = async (e) => {
     e.preventDefault();
-    await fetch("http://localhost:5000/api/products", {
+    await fetch("https://project-laptop-store-9zsr.onrender.com/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -85,7 +85,7 @@ export default function Admin() {
 
   const handleDeleteProduct = async (id) => {
     if (window.confirm("Xóa vĩnh viễn sản phẩm này?")) {
-      await fetch(`http://localhost:5000/api/products/${id}`, {
+      await fetch(`https://project-laptop-store-9zsr.onrender.com/api/products/${id}`, {
         method: "DELETE",
       });
       fetchData();
@@ -95,7 +95,7 @@ export default function Admin() {
   // Các hàm cũ (Xóa User, Sửa Status Order...)
   const handleDeleteUser = async (id) => {
     if (window.confirm("Xóa người dùng này?")) {
-      await fetch(`http://localhost:5000/api/users/${id}`, {
+      await fetch(`https://project-laptop-store-9zsr.onrender.com/api/users/${id}`, {
         method: "DELETE",
       });
       fetchData();
@@ -103,7 +103,7 @@ export default function Admin() {
   };
 
   const handleUpdateStatus = async (id, newStatus) => {
-    await fetch(`http://localhost:5000/api/orders/${id}/status`, {
+    await fetch(`https://project-laptop-store-9zsr.onrender.com/api/orders/${id}/status`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
@@ -118,7 +118,7 @@ export default function Admin() {
     if (
       window.confirm("Bạn có chắc chắn muốn xóa vĩnh viễn đơn hàng này không?")
     ) {
-      await fetch(`http://localhost:5000/api/orders/${id}`, {
+      await fetch(`https://project-laptop-store-9zsr.onrender.com/api/orders/${id}`, {
         method: "DELETE",
       });
       fetchData(); // Tải lại danh sách

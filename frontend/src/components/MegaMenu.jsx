@@ -7,7 +7,7 @@ export default function MegaMenu() {
 
   // GỌI API ĐỂ LẤY DỮ LIỆU MENU ĐỘNG TỪ DATABASE
   useEffect(() => {
-    fetch("http://localhost:5000/api/products")
+    fetch("https://project-laptop-store-9zsr.onrender.com/api/products")
       .then((res) => res.json())
       .then((data) => {
         // Gom nhóm sản phẩm theo Brand và Category

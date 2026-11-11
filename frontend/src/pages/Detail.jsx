@@ -14,7 +14,7 @@ export default function Detail({ addToCart }) {
   // ==========================================
   useEffect(() => {
     // Gửi request lên Backend để xin thông tin của đúng cái ID trên URL
-    fetch(`http://localhost:5000/api/products/${id}`)
+    fetch(`https://project-laptop-store-9zsr.onrender.com/api/products/${id}`)
       .then((res) => res.json())
       .then((data) => setProduct(data));
   }, [id]); // Mỗi khi ID thay đổi thì sẽ tự động gọi lại API

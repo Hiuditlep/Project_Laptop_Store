@@ -39,7 +39,7 @@ const swaggerOptions = {
       description: "Tài liệu API cho đồ án Cửa hàng bán Laptop",
     },
     servers: [
-      { url: "http://localhost:5000" }, // Đổi thành link web sau khi deploy
+      { url: "https://project-laptop-store-9zsr.onrender.com" }, // Đổi thành link web sau khi deploy
     ],
   },
   // NẾU CODE BẠN ĐỂ TRONG THƯ MỤC routes, HÃY GIỮ NGUYÊN DÒNG DƯỚI ĐÂY

@@ -1,169 +1,262 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+// Import các component vừa tạo
+import BrandSlider from "../components/BrandSlider";
+import CategoryList from "../components/CategoryList";
+import SidebarFilter from "../components/SidebarFilter";
+import ProductCard from "../components/ProductCard";
 
-export default function Detail({ addToCart }) {
-  // ==========================================
-  // 1. KHỞI TẠO HOOKS & PARAMS
-  // ==========================================
-  const { id } = useParams(); // Lấy ID sản phẩm từ thanh URL (vd: /product/123)
-  const navigate = useNavigate(); // Hook dùng để điều hướng trang
-  const [product, setProduct] = useState(null); // State lưu thông tin chi tiết sản phẩm
+export default function Home({ addToCart, searchTerm }) {
+  const [allProducts, setAllProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [brands, setBrands] = useState([]);
 
-  // ==========================================
-  // 2. GỌI API LẤY DỮ LIỆU SẢN PHẨM
-  // ==========================================
+  // CÁC STATE BỘ LỌC
+  const [activeBrand, setActiveBrand] = useState("");
+  const [activeCategory, setActiveCategory] = useState("");
+  const [filterRam, setFilterRam] = useState([]);
+  const [filterStorage, setFilterStorage] = useState([]);
+  const [filterScreen, setFilterScreen] = useState([]);
+  const [filterRefresh, setFilterRefresh] = useState([]);
+  const [filterCpu, setFilterCpu] = useState([]);
+  const [filterGpu, setFilterGpu] = useState([]);
+  const [minPrice, setMinPrice] = useState(5000000);
+  const [maxPrice, setMaxPrice] = useState(null);
+  const [sortOption, setSortOption] = useState("default");
+
+  const priceStep = 1000000;
+  const highestPrice = Math.max(
+    5000000,
+    Math.ceil(
+      allProducts.reduce(
+        (highest, product) =>
+          Math.max(highest, Number(product.price_vnd || product.price || 0)),
+        0,
+      ) / priceStep,
+    ) * priceStep,
+  );
+  const selectedMaxPrice = maxPrice ?? highestPrice;
+
+  // FETCH DATA
   useEffect(() => {
-    // Gửi request lên Backend để xin thông tin của đúng cái ID trên URL
-    fetch(`https://project-laptop-store-9zsr.onrender.com/api/products/${id}`)
+    fetch(
+      `https://project-laptop-store-9zsr.onrender.com/api/products?search=${searchTerm || ""}`,
+    )
       .then((res) => res.json())
-      .then((data) => setProduct(data));
-  }, [id]); // Mỗi khi ID thay đổi thì sẽ tự động gọi lại API
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAllProducts(data);
+          setFilteredProducts(data);
+          setBrands([...new Set(data.map((p) => p.brand))].filter(Boolean));
+        } else {
+          setAllProducts([]);
+          setFilteredProducts([]);
+        }
+      })
+      .catch((err) => console.error("Lỗi tải sản phẩm:", err));
+  }, [searchTerm]);
 
-  // ==========================================
-  // 3. HIỂN THỊ MÀN HÌNH CHỜ (LOADING)
-  // ==========================================
-  // Quá trình gọi API tốn một chút thời gian, nên nếu chưa có product thì báo đang tải
-  if (!product)
-    return <div className="text-center mt-20 text-xl">Đang tải dữ liệu...</div>;
+  // LOGIC LỌC
+  useEffect(() => {
+    let result = [...allProducts];
 
-  // ==========================================
-  // 4. HIỂN THỊ GIAO DIỆN CHÍNH (RENDER)
-  // ==========================================
+    if (activeBrand)
+      result = result.filter(
+        (p) => p.brand?.toLowerCase() === activeBrand.toLowerCase(),
+      );
+    if (activeCategory)
+      result = result.filter(
+        (p) =>
+          p.name?.toLowerCase().includes(activeCategory) ||
+          p.category?.toLowerCase().includes(activeCategory),
+      );
+
+    result = result.filter((p) => {
+      const price = Number(p.price_vnd || p.price || 0);
+      return price >= minPrice && price <= selectedMaxPrice;
+    });
+
+    if (filterRam.length > 0)
+      result = result.filter((p) =>
+        filterRam.includes(String(p.ram_gb || p.ram)),
+      );
+    if (filterStorage.length > 0)
+      result = result.filter((p) =>
+        filterStorage.includes(String(p.ssd_gb || p.ssd)),
+      );
+    if (filterCpu.length > 0)
+      result = result.filter((p) =>
+        filterCpu.some((k) =>
+          (p.cpu || "").toLowerCase().includes(k.toLowerCase()),
+        ),
+      );
+    if (filterGpu.length > 0)
+      result = result.filter((p) =>
+        filterGpu.some((k) =>
+          (p.gpu || "").toLowerCase().includes(k.toLowerCase()),
+        ),
+      );
+
+    if (filterScreen.length > 0) {
+      result = result.filter((p) => {
+        const size = Number(p.screen_size_in);
+        if (!size) return false;
+        return filterScreen.some((cond) => {
+          if (cond === "<14") return size < 14;
+          if (cond === "14-15") return size >= 14 && size < 15.5;
+          if (cond === "15-17") return size >= 15.5 && size <= 17.3;
+          if (cond === ">17") return size > 17.3;
+          return false;
+        });
+      });
+    }
+
+    if (filterRefresh.length > 0) {
+      result = result.filter((p) => {
+        const hz = Number(p.refresh_rate_hz);
+        if (!hz) return false;
+        return filterRefresh.some((cond) => {
+          if (cond === "60") return hz <= 60;
+          if (cond === "120") return hz === 120;
+          if (cond === "144") return hz === 144;
+          if (cond === "165") return hz === 165;
+          if (cond === "240+") return hz >= 240;
+          return false;
+        });
+      });
+    }
+
+    setFilteredProducts(result);
+  }, [
+    allProducts,
+    activeBrand,
+    activeCategory,
+    filterRam,
+    filterStorage,
+    filterScreen,
+    filterRefresh,
+    filterCpu,
+    filterGpu,
+    minPrice,
+    selectedMaxPrice,
+  ]);
+
+  // LOGIC SẮP XẾP
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    const priceA = Number(a.price_vnd || a.price || 0);
+    const priceB = Number(b.price_vnd || b.price || 0);
+    if (sortOption === "price-asc") return priceA - priceB;
+    if (sortOption === "price-desc") return priceB - priceA;
+    if (sortOption === "name-asc")
+      return (a.name || "").localeCompare(b.name || "", "vi");
+    return 0;
+  });
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row gap-8 mt-6">
-      {/* CỘT TRÁI: ẢNH SẢN PHẨM */}
-      <div className="md:w-1/2 flex items-center justify-center">
-        <img
-          src={product.image || product.image_url}
-          alt={product.name}
-          className="w-full rounded-lg border object-cover"
+    <div className="w-full pb-10">
+      <section className="bg-white rounded-xl shadow-sm p-6 mb-6 mt-4">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">
+          Thương hiệu nổi bật
+        </h2>
+        <BrandSlider
+          brands={brands}
+          activeBrand={activeBrand}
+          setActiveBrand={setActiveBrand}
         />
-      </div>
 
-      {/* CỘT PHẢI: THÔNG TIN VÀ NÚT MUA */}
-      <div className="md:w-1/2">
-        <h2 className="text-3xl font-bold mb-4">{product.name}</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4 mt-8">
+          Nhu cầu sử dụng
+        </h2>
+        <CategoryList
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+        />
+      </section>
 
-        <p className="text-gray-500 mb-2">
-          Thương hiệu:{" "}
-          <span className="font-bold text-gray-800">{product.brand}</span>
-        </p>
+      <div className="flex flex-col md:flex-row gap-6 items-start">
+        {/* CỘT BỘ LỌC BÊN TRÁI */}
+        <SidebarFilter
+          minPrice={minPrice}
+          setMinPrice={setMinPrice}
+          selectedMaxPrice={selectedMaxPrice}
+          setMaxPrice={setMaxPrice}
+          highestPrice={highestPrice}
+          priceStep={priceStep}
+          filterCpu={filterCpu}
+          setFilterCpu={setFilterCpu}
+          filterGpu={filterGpu}
+          setFilterGpu={setFilterGpu}
+          filterRam={filterRam}
+          setFilterRam={setFilterRam}
+          filterStorage={filterStorage}
+          setFilterStorage={setFilterStorage}
+          filterScreen={filterScreen}
+          setFilterScreen={setFilterScreen}
+          filterRefresh={filterRefresh}
+          setFilterRefresh={setFilterRefresh}
+        />
 
-        {/* TÌNH TRẠNG KHO */}
-        <p className="text-gray-500 mb-2">
-          Tình trạng:{" "}
-          {(product.stock_quantity ?? 10) > 0 ? (
-            <span className="font-bold text-green-600">
-              Còn hàng ({product.stock_quantity ?? 10})
-            </span>
+        {/* LƯỚI SẢN PHẨM BÊN PHẢI */}
+        <div className="flex-1 w-full">
+          <div className="flex justify-between items-center mb-4 border-b pb-2">
+            <h2 className="text-xl font-bold uppercase text-gray-800 border-b-2 border-red-600 inline-block pb-1 mb-[-9px]">
+              LAPTOP NỔI BẬT
+            </h2>
+            <div className="hidden sm:flex items-center gap-4 text-sm font-medium">
+              <select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white outline-none focus:border-red-500"
+              >
+                <option value="default">Mặc định</option>
+                <option value="price-asc">Giá thấp đến cao</option>
+                <option value="price-desc">Giá cao đến thấp</option>
+                <option value="name-asc">Tên A - Z</option>
+              </select>
+              <span className="text-gray-500">
+                Tìm thấy{" "}
+                <strong className="text-red-600 text-lg">
+                  {filteredProducts.length}
+                </strong>{" "}
+                kết quả
+              </span>
+            </div>
+          </div>
+
+          {filteredProducts.length === 0 ? (
+            <div className="text-center text-gray-500 py-16 bg-white rounded-lg shadow-sm border flex flex-col items-center">
+              <p className="text-lg font-medium">
+                Rất tiếc, không tìm thấy laptop nào phù hợp với bộ lọc!
+              </p>
+              <button
+                onClick={() => {
+                  setActiveBrand("");
+                  setActiveCategory("");
+                  setFilterStorage([]);
+                  setFilterRam([]);
+                  setFilterScreen([]);
+                  setFilterRefresh([]);
+                  setFilterCpu([]);
+                  setFilterGpu([]);
+                  setMinPrice(5000000);
+                  setMaxPrice(null);
+                }}
+                className="mt-4 px-4 py-2 bg-red-50 text-red-600 rounded-md font-semibold hover:bg-red-100 transition"
+              >
+                Xóa tất cả bộ lọc
+              </button>
+            </div>
           ) : (
-            <span className="font-bold text-red-600">Tạm hết hàng</span>
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+              {sortedProducts.map((item) => (
+                // Gọi component ProductCard đã tách
+                <ProductCard
+                  key={item.product_id || item.id}
+                  item={item}
+                  addToCart={addToCart}
+                />
+              ))}
+            </div>
           )}
-        </p>
-
-        <p className="text-red-600 text-3xl font-bold mb-6">
-          {(product.price_vnd || product.price || 0).toLocaleString("vi-VN")} đ
-        </p>
-
-        {/* Bảng cấu hình chi tiết (Đã map chuẩn xác theo Database PostgreSQL / CSV) */}
-        <div className="bg-gray-50 p-5 rounded-lg mb-6 border">
-          <h3 className="font-bold mb-3 text-lg border-b border-gray-200 pb-2 uppercase">
-            Cấu hình chi tiết
-          </h3>
-          <ul className="space-y-3 text-sm">
-            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
-              <span className="text-gray-500">Vi xử lý (CPU):</span>
-              <span className="font-semibold text-right">{product.cpu}</span>
-            </li>
-
-            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
-              <span className="text-gray-500">Card đồ họa (GPU):</span>
-              <span className="font-semibold text-right">
-                {product.gpu}{" "}
-                {product.gpu_vram_gb ? `(${product.gpu_vram_gb}GB)` : ""}
-              </span>
-            </li>
-
-            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
-              <span className="text-gray-500">RAM:</span>
-              <span className="font-semibold text-right">
-                {product.ram_gb ? `${product.ram_gb} GB` : "Đang cập nhật"}
-              </span>
-            </li>
-
-            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
-              <span className="text-gray-500">Ổ cứng:</span>
-              <span className="font-semibold text-right">
-                {product.ssd_gb ? `${product.ssd_gb} GB SSD` : ""}
-                {product.hdd_gb && Number(product.hdd_gb) > 0
-                  ? ` + ${product.hdd_gb}GB HDD`
-                  : ""}
-                {!product.ssd_gb &&
-                (!product.hdd_gb || Number(product.hdd_gb) <= 0)
-                  ? "Đang cập nhật"
-                  : ""}
-              </span>
-            </li>
-
-            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
-              <span className="text-gray-500">Màn hình:</span>
-              <span className="font-semibold text-right">
-                {product.screen_size_in ? `${product.screen_size_in}"` : ""}{" "}
-                {product.panel_type || ""}{" "}
-                {product.resolution ? `(${product.resolution})` : ""}{" "}
-                {product.refresh_rate_hz
-                  ? `- ${product.refresh_rate_hz}Hz`
-                  : ""}
-              </span>
-            </li>
-
-            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
-              <span className="text-gray-500">Trọng lượng:</span>
-              <span className="font-semibold text-right">
-                {product.weight_kg
-                  ? `${product.weight_kg} kg`
-                  : "Đang cập nhật"}
-              </span>
-            </li>
-
-            <li className="flex justify-between border-b border-dashed border-gray-300 pb-1">
-              <span className="text-gray-500">Pin & Hệ điều hành:</span>
-              <span className="font-semibold text-right">
-                {product.battery_wh ? `${product.battery_wh}Wh` : "N/A"} |{" "}
-                {product.operating_system || "Windows 11"}
-              </span>
-            </li>
-
-            <li className="flex justify-between pb-1 mt-2 pt-1">
-              <span className="text-gray-500">Phân khúc:</span>
-              <span className="font-semibold text-right uppercase text-blue-600">
-                {product.category}
-              </span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Cụm nút bấm */}
-        <div className="flex gap-4 mt-8">
-          <button
-            onClick={() => addToCart(product)}
-            disabled={(product.stock_quantity ?? 10) <= 0}
-            className={`flex-1 py-3 rounded-lg font-bold transition ${
-              (product.stock_quantity ?? 10) > 0
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
-          >
-            {(product.stock_quantity ?? 10) > 0
-              ? "THÊM VÀO GIỎ HÀNG"
-              : "ĐÃ HẾT HÀNG"}
-          </button>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-6 border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-100 transition"
-          >
-            Quay lại
-          </button>
         </div>
       </div>
     </div>

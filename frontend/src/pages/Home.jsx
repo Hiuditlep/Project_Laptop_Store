@@ -15,8 +15,25 @@ export default function Home({ addToCart, searchTerm }) {
   const [filterRefresh, setFilterRefresh] = useState([]);
   const [filterCpu, setFilterCpu] = useState([]);
   const [filterGpu, setFilterGpu] = useState([]);
+  const [minPrice, setMinPrice] = useState(5000000);
+  const [maxPrice, setMaxPrice] = useState(null);
 
   const brandSliderRef = useRef(null);
+
+  // Mỗi nấc giá là 1 triệu; tự lấy mức giá cao nhất từ danh sách sản phẩm.
+  const priceStep = 1000000;
+  const highestPrice = Math.max(
+    5000000,
+    Math.ceil(
+      allProducts.reduce(
+        (highest, product) =>
+          Math.max(highest, Number(product.price_vnd || product.price || 0)),
+        0,
+      ) / priceStep,
+    ) * priceStep,
+  );
+  const selectedMaxPrice = maxPrice ?? highestPrice;
+
 
   const categories = [
     {
@@ -91,6 +108,11 @@ export default function Home({ addToCart, searchTerm }) {
           p.category?.toLowerCase().includes(activeCategory),
       );
     }
+    // LỌC THEO KHOẢNG GIÁ
+    result = result.filter((p) => {
+      const price = Number(p.price_vnd || p.price || 0);
+      return price >= minPrice && price <= selectedMaxPrice;
+    });
 
     if (filterRam.length > 0) {
       result = result.filter((p) =>
@@ -158,7 +180,9 @@ export default function Home({ addToCart, searchTerm }) {
     filterRefresh,
     filterCpu,
     filterGpu,
-  ]);
+    minPrice,
+    selectedMaxPrice,
+]);
 
   const toggleFilter = (state, setState, value) => {
     setState(
@@ -315,6 +339,72 @@ export default function Home({ addToCart, searchTerm }) {
           </div>
 
           <div className="p-5 overflow-y-auto scrollbar-thin flex-1">
+             {/* LỌC THEO GIÁ */}
+<div className="mb-6">
+  <div className="flex items-center justify-between border-b pb-1 mb-4">
+    <h3 className="font-semibold text-gray-800">Khoảng giá</h3>
+    <button
+      type="button"
+      onClick={() => {
+        setMinPrice(5000000);
+        setMaxPrice(null);
+      }}
+      className="text-xs text-red-600 hover:underline"
+    >
+      Đặt lại
+    </button>
+  </div>
+
+  <div className="space-y-4 text-sm">
+    <div>
+      <div className="flex justify-between mb-2">
+        <label className="text-gray-600">Giá thấp nhất</label>
+        <span className="font-semibold text-red-600">
+          {minPrice.toLocaleString("vi-VN")} ₫
+        </span>
+      </div>
+      <input
+        type="range"
+        min={5000000}
+        max={highestPrice}
+        step={priceStep}
+        value={Math.min(minPrice, highestPrice)}
+        onChange={(e) =>
+          setMinPrice(
+            Math.min(Number(e.target.value), selectedMaxPrice)
+          )
+        }
+        className="w-full accent-red-600 cursor-pointer"
+      />
+    </div>
+
+    <div>
+      <div className="flex justify-between mb-2">
+        <label className="text-gray-600">Giá cao nhất</label>
+        <span className="font-semibold text-red-600">
+          {selectedMaxPrice.toLocaleString("vi-VN")} ₫
+        </span>
+      </div>
+      <input
+        type="range"
+        min={5000000}
+        max={highestPrice}
+        step={priceStep}
+        value={selectedMaxPrice}
+        onChange={(e) =>
+          setMaxPrice(
+            Math.max(Number(e.target.value), minPrice)
+          )
+        }
+        className="w-full accent-red-600 cursor-pointer"
+      />
+    </div>
+
+    <p className="text-xs text-gray-500">
+      Kéo từng nấc 1 triệu để chọn khoảng giá
+    </p>
+  </div>
+</div>                         
             {/* Lọc CPU */}
             <div className="mb-6">
               <h3 className="font-semibold text-gray-800 mb-3 border-b pb-1">
@@ -531,6 +621,8 @@ export default function Home({ addToCart, searchTerm }) {
                   setFilterRefresh([]);
                   setFilterCpu([]);
                   setFilterGpu([]);
+                  setMinPrice(5000000);
+                  setMaxPrice(null);
                 }}
                 className="mt-4 px-4 py-2 bg-red-50 text-red-600 rounded-md font-semibold hover:bg-red-100 transition"
               >

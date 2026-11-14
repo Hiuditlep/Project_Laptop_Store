@@ -17,6 +17,7 @@ export default function Home({ addToCart, searchTerm }) {
   const [filterGpu, setFilterGpu] = useState([]);
   const [minPrice, setMinPrice] = useState(5000000);
   const [maxPrice, setMaxPrice] = useState(null);
+  const [sortOption, setSortOption] = useState("default");
 
   const brandSliderRef = useRef(null);
 
@@ -200,7 +201,25 @@ export default function Home({ addToCart, searchTerm }) {
       });
     }
   };
+// SẮP XẾP SẢN PHẨM
+const sortedProducts = [...filteredProducts].sort((a, b) => {
+  const priceA = Number(a.price_vnd || a.price || 0);
+  const priceB = Number(b.price_vnd || b.price || 0);
 
+  switch (sortOption) {
+    case "price-asc":
+      return priceA - priceB;
+
+    case "price-desc":
+      return priceB - priceA;
+
+    case "name-asc":
+      return (a.name || "").localeCompare(b.name || "", "vi");
+
+    default:
+      return 0;
+  }
+});
   // Helper để vẽ nút Checkbox
   const CheckboxItem = ({ label, state, setState, val }) => (
     <label className="flex items-center gap-3 cursor-pointer group mb-3 last:mb-0">
@@ -595,16 +614,27 @@ export default function Home({ addToCart, searchTerm }) {
             <h2 className="text-xl font-bold uppercase text-gray-800 border-b-2 border-red-600 inline-block pb-1 mb-[-9px]">
               LAPTOP NỔI BẬT
             </h2>
-            <div className="hidden sm:flex gap-4 text-sm font-medium">
+            <div className="hidden sm:flex items-center gap-4 text-sm font-medium">
+              <select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white outline-none focus:border-red-500"
+              >
+                <option value="default">Mặc định</option>
+                <option value="price-asc">Giá thấp đến cao</option>
+                <option value="price-desc">Giá cao đến thấp</option>
+                  <option value="name-asc">Tên A - Z</option>
+              </select>
+
               <span className="text-gray-500">
                 Tìm thấy{" "}
                 <strong className="text-red-600 text-lg">
-                  {filteredProducts.length}
+                    {filteredProducts.length}
                 </strong>{" "}
-                kết quả
-              </span>
-            </div>
-          </div>
+                  kết quả
+                </span>
+              </div>
+                        </div>
 
           {filteredProducts.length === 0 ? (
             <div className="text-center text-gray-500 py-16 bg-white rounded-lg shadow-sm border flex flex-col items-center">
@@ -631,7 +661,7 @@ export default function Home({ addToCart, searchTerm }) {
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-              {filteredProducts.map((item) => {
+              {sortedProducts.map((item) => {
                 const productId = item.product_id || item.id;
                 const productImage =
                   item.image_url || item.image || "/placeholder-laptop.png";

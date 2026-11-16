@@ -16,17 +16,33 @@ const pool = require("../db");
 router.get("/", async (req, res) => {
   try {
     const ordersResult = await pool.query(`
-      SELECT o.*, u.full_name 
+      SELECT o.*, u.full_name, u.email
       FROM orders o
       LEFT JOIN users u ON o.user_id = u.user_id
       ORDER BY o.created_at DESC
     `);
 
     const itemsResult = await pool.query(`
-      SELECT oi.*, p.name, p.image_url
-      FROM order_items oi
-      LEFT JOIN products p ON oi.product_id = p.product_id
-    `);
+  SELECT
+    oi.*,
+    p.name,
+    p.image_url,
+    p.cpu,
+    p.gpu,
+    p.gpu_vram_gb,
+    p.ram_gb,
+    p.ssd_gb,
+    p.hdd_gb,
+    p.screen_size_in,
+    p.panel_type,
+    p.resolution,
+    p.refresh_rate_hz,
+    p.weight_kg,
+    p.battery_wh,
+    p.operating_system
+  FROM order_items oi
+  LEFT JOIN products p ON oi.product_id = p.product_id
+`);
 
     const orders = ordersResult.rows.map((order) => ({
       ...order,
@@ -35,6 +51,7 @@ router.get("/", async (req, res) => {
       total: Number(order.total_amount),
       customerInfo: {
         name: order.full_name || "Khách hàng",
+        email: order.email || "Chưa có email",
         phone: order.phone,
         address: order.shipping_address,
       },

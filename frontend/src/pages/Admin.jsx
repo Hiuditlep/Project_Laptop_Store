@@ -155,79 +155,147 @@ export default function Admin() {
         </button>
       </div>
 
-      {/* NỘI DUNG TAB ĐƠN HÀNG */}
-      {activeTab === "orders" && (
-        <div className="space-y-4">
-          {orders.map((o) => (
-            <div
-              key={o.id}
-              className="bg-gray-50 border p-4 rounded-lg flex justify-between items-center"
+    
+              
+{/* NỘI DUNG TAB ĐƠN HÀNG */}
+{activeTab === "orders" && (
+  <div className="space-y-4">
+    {orders.map((o) => (
+      <div
+        key={o.id}
+        className="bg-gray-50 border p-4 rounded-lg space-y-4"
+      >
+        {/* Thông tin tổng quan đơn hàng */}
+        <div className="flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <p className="font-bold text-blue-600">
+              Đơn hàng #{o.id}
+            </p>
+            <p className="text-red-600 font-bold">
+              Tổng tiền: {Number(o.total || 0).toLocaleString("vi-VN")} đ
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <select
+              value={o.status || "Chờ duyệt"}
+              onChange={(e) =>
+                handleUpdateStatus(o.id, e.target.value)
+              }
+              className={`border p-2 rounded font-medium outline-none ${
+                o.status === "Đã giao"
+                  ? "bg-green-100 text-green-700"
+                  : o.status === "Đã hủy"
+                    ? "bg-red-100 text-red-700"
+                    : "bg-yellow-100 text-yellow-700"
+              }`}
             >
-              <div>
-                <p className="font-bold text-blue-600">{o.id}</p>
-                <p>
-                  Khách: {o.customerInfo.name} | Tổng:{" "}
-                  {o.total.toLocaleString("vi-VN")} đ
-                </p>
-              </div>
-              {/* NỘI DUNG TAB ĐƠN HÀNG */}
-              {activeTab === "orders" && (
-                <div className="space-y-4">
-                  {orders.map((o) => (
-                    <div
-                      key={o.id}
-                      className="bg-gray-50 border p-4 rounded-lg flex justify-between items-center hover:shadow-md transition"
-                    >
-                      <div>
-                        <p className="font-bold text-blue-600">{o.id}</p>
-                        <p className="text-sm">
-                          Khách hàng:{" "}
-                          <span className="font-semibold">
-                            {o.customerInfo?.name || "Không rõ"}
-                          </span>
-                        </p>
-                        <p className="text-red-600 font-bold">
-                          Tổng tiền: {o.total?.toLocaleString("vi-VN")} đ
-                        </p>
-                      </div>
+              <option value="Chờ duyệt">Chờ duyệt</option>
+              <option value="Đang giao">Đang giao</option>
+              <option value="Đã giao">Đã giao</option>
+              <option value="Đã hủy">Đã hủy</option>
+            </select>
 
-                      <div className="flex items-center gap-3">
-                        {/* Dropdown trạng thái đã thêm "Đã hủy" */}
-                        <select
-                          value={o.status || "Chờ duyệt"}
-                          onChange={(e) =>
-                            handleUpdateStatus(o.id, e.target.value)
-                          }
-                          className={`border p-2 rounded font-medium outline-none ${
-                            o.status === "Đã giao"
-                              ? "bg-green-100 text-green-700"
-                              : o.status === "Đã hủy"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          <option value="Chờ duyệt">Chờ duyệt</option>
-                          <option value="Đang giao">Đang giao</option>
-                          <option value="Đã giao">Đã giao</option>
-                          <option value="Đã hủy">Đã hủy</option>
-                        </select>
-
-                        {/* Nút Xóa đơn hàng */}
-                        <button
-                          onClick={() => handleDeleteOrder(o.id)}
-                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded font-bold transition"
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            <button
+              onClick={() => handleDeleteOrder(o.id)}
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded font-bold transition"
+            >
+              Xóa
+            </button>
+          </div>
         </div>
-      )}
+
+        {/* Thông tin khách hàng */}
+        <div className="bg-white border rounded-lg p-4">
+          <h3 className="font-bold text-gray-800 mb-3">
+            Thông tin khách hàng
+          </h3>
+          <div className="grid sm:grid-cols-2 gap-2 text-sm">
+            <p>
+              <strong>Họ tên:</strong>{" "}
+              {o.customerInfo?.name || "Chưa có thông tin"}
+            </p>
+            <p>
+              <strong>Email:</strong>{" "}
+              {o.customerInfo?.email || "Chưa có email"}
+            </p>
+            <p>
+              <strong>Số điện thoại:</strong>{" "}
+              {o.customerInfo?.phone || "Chưa có"}
+            </p>
+            <p className="sm:col-span-2">
+              <strong>Địa chỉ giao hàng:</strong>{" "}
+              {o.customerInfo?.address || "Chưa có"}
+            </p>
+          </div>
+        </div>
+
+        {/* Danh sách sản phẩm */}
+        <div className="bg-white border rounded-lg p-4">
+          <h3 className="font-bold text-gray-800 mb-3">
+            Sản phẩm đã đặt ({o.items?.length || 0})
+          </h3>
+
+          {o.items?.length > 0 ? (
+            <div className="space-y-3">
+              {o.items.map((item, index) => (
+                <div
+                  key={`${o.id}-${item.product_id}-${index}`}
+                  className="flex flex-col sm:flex-row gap-3 border-b last:border-0 pb-3"
+                >
+                  <img
+                    src={item.image_url || "/Logo.png"}
+                    alt={item.name || "Laptop"}
+                    className="w-20 h-20 object-contain bg-gray-50 rounded border"
+                  />
+
+                  <div className="flex-1 text-sm space-y-1">
+                    <p className="font-bold text-gray-800">
+                      {item.name || "Sản phẩm"}
+                    </p>
+                    <p>CPU: {item.cpu || "Chưa cập nhật"}</p>
+                    <p>GPU: {item.gpu || "Chưa cập nhật"}</p>
+                    <p>RAM: {item.ram_gb ? `${item.ram_gb}GB` : "Chưa cập nhật"}</p>
+                    <p>SSD: {item.ssd_gb ? `${item.ssd_gb}GB` : "Chưa cập nhật"}</p>
+                    <p>Màn hình: {item.screen_size_in ? `${item.screen_size_in} inch` : "Chưa cập nhật"}</p>
+                    <p>
+                      Số lượng: {item.quantity}
+                    </p>
+                  </div>
+
+                  <div className="sm:text-right text-sm font-bold text-red-600">
+                    {Number(item.subtotal || 0).toLocaleString("vi-VN")} đ
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">
+              Không tìm thấy sản phẩm trong đơn hàng này.
+            </p>
+          )}
+        </div>
+
+        {/* Thanh toán */}
+        <div className="bg-white border rounded-lg p-4 text-sm">
+          <h3 className="font-bold text-gray-800 mb-2">
+            Thông tin thanh toán
+          </h3>
+          <p>
+            <strong>Phương thức:</strong> COD (Thanh toán khi nhận hàng)
+          </p>
+          <p>
+            <strong>Tổng thanh toán:</strong>{" "}
+            <span className="font-bold text-red-600">
+              {Number(o.total || 0).toLocaleString("vi-VN")} đ
+            </span>
+          </p>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
 
       {/* NỘI DUNG TAB SẢN PHẨM */}
       {activeTab === "products" && (
